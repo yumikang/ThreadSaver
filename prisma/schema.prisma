@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// 타래 원본 데이터
+// ========================================
+
+model Thread {
+  id              String   @id @default(uuid())
+  conversationId  String   @unique @map("conversation_id") @db.VarChar(50)
+  authorUsername  String   @map("author_username") @db.VarChar(100)
+  authorName      String?  @map("author_name") @db.VarChar(255)
+  tweetCount      Int      @map("tweet_count")
+  collectedAt     DateTime @default(now()) @map("collected_at")
+  firstTweetUrl   String   @map("first_tweet_url")
+  firstTweetDate  DateTime? @map("first_tweet_date")
+
+  // 통계
+  downloadCount   Int      @default(0) @map("download_count")
+
+  // Relations
+  tweets          Tweet[]
+  seriesThreads   SeriesThread[]
+  userSaves       UserSave[]
+
+  @@index([conversationId])
+  @@index([authorUsername])
+  @@index([collectedAt(sort: Desc)])
+  @@map("threads")
+}
+
+model Tweet {
+  id              BigInt   @id
+  threadId        String   @map("thread_id")
+  content         String
+  createdAt       DateTime @map("created_at")
+  authorUsername  String   @map("author_username") @db.VarChar(100)
+
+  // 추가 정보
+  replyToId       BigInt?  @map("reply_to_id")
+  retweetCount    Int      @default(0) @map("retweet_count")
+  likeCount       Int      @default(0) @map("like_count")
+
+  // 미디어
+  mediaUrls       String[] @map("media_urls")
+
+  // 정렬
+  sequenceNumber  Int      @map("sequence_number")
+
+  // Relations
+  thread          Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  bookmarks       Bookmark[]
+  readingProgress ReadingProgress[]
+
+  @@index([threadId, sequenceNumber])
+  @@map("tweets")
+}
+
+// ========================================
+// 시리즈 관리
+// ========================================
+
+model Series {
+  id              String   @id @default(uuid())
+  authorUsername  String   @map("author_username") @db.VarChar(100)
+
+  // 시리즈 정보
+  title           String   @db.VarChar(255)
+  description     String?
+  coverImageUrl   String?  @map("cover_image_url")
+
+  // 상태
+  status          String   @default("ongoing") @db.VarChar(20) // ongoing, completed, hiatus
+
+  // 통계
+  totalTweets     Int      @default(0) @map("total_tweets")
+  totalThreads    Int      @default(0) @map("total_threads")
+  totalViews      Int      @default(0) @map("total_views")
+
+  // URL
+  slug            String   @unique @db.VarChar(255)
+  isPublic        Boolean  @default(true) @map("is_public")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  seriesThreads   SeriesThread[]
+  readingProgress ReadingProgress[]
+  bookmarks       Bookmark[]
+  seriesViews     SeriesView[]
+  analytics       Analytics[]
+
+  @@index([slug])
+  @@index([authorUsername])
+  @@index([isPublic, updatedAt(sort: Desc)])
+  @@map("series")
+}
+
+model SeriesThread {
+  id             String   @id @default(uuid())
+  seriesId       String   @map("series_id")
+  threadId       String   @map("thread_id")
+
+  // 시리즈 내 순서
+  sequenceNumber Int      @map("sequence_number")
+
+  addedAt        DateTime @default(now()) @map("added_at")
+
+  // Relations
+  series         Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  thread         Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@unique([seriesId, threadId])
+  @@unique([seriesId, sequenceNumber])
+  @@index([seriesId, sequenceNumber])
+  @@map("series_threads")
+}
+
+// ========================================
+// 독자 기능
+// ========================================
+
+model ReadingProgress {
+  id                 String   @id @default(uuid())
+  sessionId          String   @map("session_id") @db.VarChar(255)
+  seriesId           String   @map("series_id")
+
+  lastReadTweetId    BigInt?  @map("last_read_tweet_id")
+  progressPercentage Int?     @map("progress_percentage")
+
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  series             Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  lastReadTweet      Tweet?   @relation(fields: [lastReadTweetId], references: [id])
+
+  @@unique([sessionId, seriesId])
+  @@index([sessionId])
+  @@map("reading_progress")
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  sessionId String   @map("session_id") @db.VarChar(255)
+  seriesId  String   @map("series_id")
+  tweetId   BigInt   @map("tweet_id")
+
+  // 북마크 메타
+  note      String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  tweet     Tweet    @relation(fields: [tweetId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, createdAt(sort: Desc)])
+  @@index([seriesId, createdAt(sort: Desc)])
+  @@map("bookmarks")
+}
+
+model SeriesView {
+  id        String   @id @default(uuid())
+  seriesId  String   @map("series_id")
+  sessionId String?  @map("session_id") @db.VarChar(255)
+
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  // Relations
+  series    Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([seriesId, viewedAt])
+  @@map("series_views")
+}
+
+// ========================================
+// 사용자 히스토리 & 통계
+// ========================================
+
+model UserSave {
+  id        String   @id @default(uuid())
+  sessionId String?  @map("session_id") @db.VarChar(255)
+  threadId  String   @map("thread_id")
+  savedAt   DateTime @default(now()) @map("saved_at")
+  format    String   @default("markdown") @db.VarChar(20)
+
+  // Relations
+  thread    Thread   @relation(fields: [threadId], references: [id])
+
+  @@index([sessionId, savedAt(sort: Desc)])
+  @@map("user_saves")
+}
+
+model Analytics {
+  id        Int      @id @default(autoincrement())
+  eventType String   @map("event_type") @db.VarChar(50) // 'scrape', 'download', 'series_created'
+  threadId  String?  @map("thread_id")
+  seriesId  String?  @map("series_id")
+  format    String?  @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  series    Series?  @relation(fields: [seriesId], references: [id])
+
+  @@index([eventType, createdAt])
+  @@map("analytics")
+}
