@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { isValidTwitterUrl } from '@/lib/utils'
+import { FileArchive } from 'lucide-react'
 
 export default function DashboardPage() {
   const [twitterUrl, setTwitterUrl] = useState('')
@@ -104,6 +106,28 @@ export default function DashboardPage() {
           트위터 타래를 시리즈로 만들어보세요
         </p>
       </div>
+
+      {/* Twitter Archive 안내 */}
+      <Card className="mb-6 border-primary/20 bg-primary/5">
+        <CardContent className="pt-6">
+          <div className="flex items-start gap-4">
+            <FileArchive className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="font-semibold mb-2">💡 새로운 방법: Twitter Archive 가져오기</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                본인의 Twitter 데이터를 한 번에 가져와서 자동으로 타래를 감지할 수 있습니다.
+                스크래핑 없이 안전하고 빠르게!
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/dashboard/import">
+                  <FileArchive className="h-4 w-4 mr-2" />
+                  Archive 가져오기
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
