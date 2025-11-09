@@ -44,10 +44,9 @@ export default function Home() {
           <div className="hero-simple-content">
             {/* Icon */}
             <div className="hero-icon">
-              <svg width="80" height="80" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="35" fill="#8B5CF6" opacity="0.2"/>
-                <text x="40" y="55" fontSize="40" textAnchor="middle" fill="#8B5CF6">📚</text>
-              </svg>
+              <div className="icon-background">
+                <img src="/heart-icon.png" alt="Heart Icon" className="heart-icon-img" />
+              </div>
             </div>
 
             {/* Main Title */}
