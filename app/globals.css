@@ -101,14 +101,38 @@ body {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
 }
 
-.dark-theme button:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary) {
-  background: rgba(139, 92, 246, 0.2);
-  color: #ffffff;
-  border-color: rgba(139, 92, 246, 0.3);
+.dark-theme button:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary),
+.dark-theme a[class*="button"],
+.dark-theme a[class*="btn"] {
+  background: rgba(139, 92, 246, 0.2) !important;
+  color: #ffffff !important;
+  border-color: rgba(139, 92, 246, 0.3) !important;
 }
 
-.dark-theme button:hover:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary) {
-  background: rgba(139, 92, 246, 0.3);
+.dark-theme button:hover:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary),
+.dark-theme a[class*="button"]:hover,
+.dark-theme a[class*="btn"]:hover {
+  background: rgba(139, 92, 246, 0.3) !important;
+}
+
+.dark-theme .bg-background {
+  background: rgba(15, 15, 30, 0.8) !important;
+}
+
+.dark-theme .border-input {
+  border-color: rgba(139, 92, 246, 0.3) !important;
+}
+
+.dark-theme .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(139, 92, 246, 0.1) !important;
+}
+
+.dark-theme .hover\:bg-accent:hover {
+  background: rgba(139, 92, 246, 0.2) !important;
+}
+
+.dark-theme .hover\:text-accent-foreground:hover {
+  color: #ffffff !important;
 }
 
 .dark-theme .bg-primary\/5 {
