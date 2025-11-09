@@ -11,7 +11,7 @@ export default function Home() {
           StoryArchive
         </h1>
         <p className="text-xl md:text-2xl text-muted-foreground mb-8">
-          트위터 연재물을, 웹소설처럼 읽는다
+          트위터 썰 수집기
         </p>
         <div className="flex gap-4 justify-center">
           <Button size="lg" asChild>
