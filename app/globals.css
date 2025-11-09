@@ -33,6 +33,109 @@ body {
   color: #ffffff;
 }
 
+/* Dark Theme Components */
+.dark-theme .text-muted-foreground {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.dark-theme [class*="Card"] {
+  background: rgba(26, 26, 46, 0.6);
+  border-color: rgba(139, 92, 246, 0.2);
+  color: #ffffff;
+}
+
+.dark-theme .border-blue-200 {
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.dark-theme .bg-blue-50 {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.dark-theme .text-blue-900,
+.dark-theme .text-blue-800 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.dark-theme .text-destructive {
+  color: #f87171;
+}
+
+.dark-theme .bg-destructive\/10 {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.dark-theme .border-destructive\/20 {
+  border-color: rgba(248, 113, 113, 0.2);
+}
+
+.dark-theme .bg-green-50 {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.dark-theme .border-green-200 {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.dark-theme .text-green-600,
+.dark-theme .text-green-900,
+.dark-theme .text-green-800 {
+  color: #4ade80;
+}
+
+.dark-theme input,
+.dark-theme textarea {
+  background: rgba(15, 15, 30, 0.8);
+  border-color: rgba(139, 92, 246, 0.3);
+  color: #ffffff;
+}
+
+.dark-theme input::placeholder,
+.dark-theme textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.dark-theme input:focus,
+.dark-theme textarea:focus {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.dark-theme button:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary) {
+  background: rgba(139, 92, 246, 0.2);
+  color: #ffffff;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.dark-theme button:hover:not(.btn-quick-start):not(.btn-cta):not(.btn-cta-secondary) {
+  background: rgba(139, 92, 246, 0.3);
+}
+
+.dark-theme .bg-primary\/5 {
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.dark-theme .border-primary\/20 {
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.dark-theme .text-primary {
+  color: #8B5CF6;
+}
+
+.dark-theme .bg-secondary {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.dark-theme .border-dashed {
+  border-style: dashed;
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.dark-theme .hover\:border-primary\/50:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
 .container-custom {
   max-width: 1200px;
   margin: 0 auto;

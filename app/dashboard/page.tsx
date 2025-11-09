@@ -99,13 +99,14 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-12 max-w-2xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">창작자 대시보드</h1>
-        <p className="text-muted-foreground">
-          트위터 타래를 시리즈로 만들어보세요
-        </p>
-      </div>
+    <main className="dark-theme min-h-screen">
+      <div className="container-custom py-12 max-w-2xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">창작자 대시보드</h1>
+          <p className="text-muted-foreground">
+            트위터 타래를 시리즈로 만들어보세요
+          </p>
+        </div>
 
       {/* Twitter Archive 안내 */}
       <Card className="mb-6 border-primary/20 bg-primary/5">
@@ -205,17 +206,18 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>사용 방법</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm text-muted-foreground">
-          <p>1. 트위터에서 아카이브하고 싶은 타래의 URL을 복사하세요</p>
-          <p>2. 위 폼에 URL과 시리즈 정보를 입력하세요</p>
-          <p>3. '시리즈 만들기' 버튼을 클릭하면 자동으로 타래가 수집됩니다</p>
-          <p>4. 생성된 시리즈 페이지로 이동하여 확인하세요</p>
-        </CardContent>
-      </Card>
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>사용 방법</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <p>1. 트위터에서 아카이브하고 싶은 타래의 URL을 복사하세요</p>
+            <p>2. 위 폼에 URL과 시리즈 정보를 입력하세요</p>
+            <p>3. '시리즈 만들기' 버튼을 클릭하면 자동으로 타래가 수집됩니다</p>
+            <p>4. 생성된 시리즈 페이지로 이동하여 확인하세요</p>
+          </CardContent>
+        </Card>
+      </div>
     </main>
   )
 }

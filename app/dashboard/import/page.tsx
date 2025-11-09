@@ -43,13 +43,14 @@ export default function ImportPage() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-12 max-w-3xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Twitter Archive 가져오기</h1>
-        <p className="text-muted-foreground">
-          자신의 Twitter 데이터를 가져와서 자동으로 타래를 감지하고 시리즈로 만듭니다
-        </p>
-      </div>
+    <main className="dark-theme min-h-screen">
+      <div className="container-custom py-12 max-w-3xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Twitter Archive 가져오기</h1>
+          <p className="text-muted-foreground">
+            자신의 Twitter 데이터를 가져와서 자동으로 타래를 감지하고 시리즈로 만듭니다
+          </p>
+        </div>
 
       {/* 안내 카드 */}
       <Card className="mb-6 border-blue-200 bg-blue-50">
@@ -188,7 +189,8 @@ export default function ImportPage() {
             </p>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </main>
   )
 }

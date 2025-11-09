@@ -20,13 +20,14 @@ export default async function SeriesListPage() {
   const { data: seriesList } = await getSeriesList()
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">시리즈 둘러보기</h1>
-        <p className="text-muted-foreground">
-          다양한 창작물을 웹소설처럼 편안하게 읽어보세요
-        </p>
-      </div>
+    <main className="dark-theme min-h-screen">
+      <div className="container-custom py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">시리즈 둘러보기</h1>
+          <p className="text-muted-foreground">
+            다양한 창작물을 웹소설처럼 편안하게 읽어보세요
+          </p>
+        </div>
 
       {seriesList.length === 0 ? (
         <Card className="text-center py-12">
@@ -79,6 +80,7 @@ export default async function SeriesListPage() {
           ))}
         </div>
       )}
+      </div>
     </main>
   )
 }
