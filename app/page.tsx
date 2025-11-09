@@ -1,7 +1,41 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
+  const [threadUrl, setThreadUrl] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  const handleQuickStart = async () => {
+    if (!threadUrl.trim()) {
+      alert('트위터 타래 링크를 입력해주세요!')
+      return
+    }
+
+    // Twitter URL 검증
+    const twitterUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/\w+\/status\/\d+/
+    if (!twitterUrlPattern.test(threadUrl)) {
+      alert('올바른 트위터 타래 링크를 입력해주세요.\n예: https://twitter.com/username/status/123456789')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // Extension API 호출 (실제로는 브라우저 확장에서 처리)
+      // 여기서는 일단 스크래핑 페이지로 리다이렉트
+      router.push(`/dashboard?url=${encodeURIComponent(threadUrl)}`)
+    } catch (error) {
+      console.error('Failed to process thread:', error)
+      alert('타래 처리 중 오류가 발생했습니다.')
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="min-h-screen dark-theme">
       {/* Hero Section */}
@@ -27,13 +61,43 @@ export default function Home() {
               웹소설처럼 편하게 읽어보세요 ✨
             </p>
 
+            {/* Quick Start Input Form */}
+            <div className="quick-start-form">
+              <div className="input-group">
+                <label htmlFor="threadUrl" className="input-label">
+                  타래 링크 (Thread URL)
+                </label>
+                <input
+                  type="text"
+                  id="threadUrl"
+                  className="thread-input"
+                  placeholder="https://twitter.com/username/status/123456789"
+                  value={threadUrl}
+                  onChange={(e) => setThreadUrl(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleQuickStart()}
+                />
+              </div>
+              <button
+                className="btn-quick-start"
+                onClick={handleQuickStart}
+                disabled={loading}
+              >
+                {loading ? '처리 중...' : '바로 시작하기 ✨'}
+              </button>
+            </div>
+
+            {/* Alternative Options */}
+            <div className="alternative-options">
+              <span className="or-divider">또는</span>
+            </div>
+
             {/* CTA Buttons */}
             <div className="hero-buttons-simple">
               <Button size="lg" className="btn-cta" asChild>
                 <Link href="/series">시리즈 둘러보기</Link>
               </Button>
               <Button size="lg" variant="outline" className="btn-cta-secondary" asChild>
-                <Link href="/dashboard">시작하기</Link>
+                <Link href="/dashboard/import">Archive 가져오기</Link>
               </Button>
             </div>
 
