@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatNumber } from '@/lib/utils'
+import { Header, Footer } from '@/components/Header'
 
 export default function SeriesReaderPage() {
   const params = useParams()
@@ -72,31 +73,40 @@ export default function SeriesReaderPage() {
 
   if (loading) {
     return (
-      <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <Skeleton className="h-12 w-2/3 mb-4" />
-        <Skeleton className="h-6 w-1/3 mb-8" />
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
-          ))}
-        </div>
-      </main>
+      <div className="dark-theme min-h-screen flex flex-col">
+        <Header />
+        <main className="container mx-auto px-4 py-12 max-w-3xl flex-1">
+          <Skeleton className="h-12 w-2/3 mb-4" />
+          <Skeleton className="h-6 w-1/3 mb-8" />
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full" />
+            ))}
+          </div>
+        </main>
+        <Footer />
+      </div>
     )
   }
 
   if (!series) {
     return (
-      <main className="container mx-auto px-4 py-12 max-w-3xl text-center">
-        <h1 className="text-2xl font-bold mb-4">시리즈를 찾을 수 없습니다</h1>
-        <Button onClick={() => window.history.back()}>돌아가기</Button>
-      </main>
+      <div className="dark-theme min-h-screen flex flex-col">
+        <Header />
+        <main className="container mx-auto px-4 py-12 max-w-3xl text-center flex-1">
+          <h1 className="text-2xl font-bold mb-4">시리즈를 찾을 수 없습니다</h1>
+          <Button onClick={() => window.history.back()}>돌아가기</Button>
+        </main>
+        <Footer />
+      </div>
     )
   }
 
   return (
-    <main className="dark-theme min-h-screen">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
+    <div className="dark-theme min-h-screen flex flex-col">
+      <Header />
+      {/* Reader Header */}
+      <div className="sticky top-16 z-10 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between max-w-3xl mx-auto">
             <div className="flex items-center gap-4">
@@ -124,7 +134,7 @@ export default function SeriesReaderPage() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
+      <main className="container mx-auto px-4 py-8 max-w-3xl flex-1">
         {/* Series Info */}
         <div className="mb-8 pb-8 border-b">
           <h1 className="text-3xl font-bold mb-4">{series.title}</h1>
@@ -190,7 +200,8 @@ export default function SeriesReaderPage() {
             목록으로 돌아가기
           </Button>
         </div>
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   )
 }

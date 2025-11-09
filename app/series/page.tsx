@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Header, Footer } from '@/components/Header'
 
 async function getSeriesList() {
   try {
@@ -20,8 +21,9 @@ export default async function SeriesListPage() {
   const { data: seriesList = [] } = await getSeriesList()
 
   return (
-    <main className="dark-theme min-h-screen">
-      <div className="container-custom py-12">
+    <div className="dark-theme min-h-screen flex flex-col">
+      <Header />
+      <main className="container-custom py-12 flex-1">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">시리즈 둘러보기</h1>
           <p className="text-muted-foreground">
@@ -80,7 +82,8 @@ export default async function SeriesListPage() {
           ))}
         </div>
       )}
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   )
 }

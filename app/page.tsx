@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Header, Footer } from '@/components/Header'
 
 export default function Home() {
   const [threadUrl, setThreadUrl] = useState('')
@@ -38,6 +39,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen dark-theme">
+      <Header />
       {/* Hero Section */}
       <section className="hero-simple">
         <div className="container-custom">
@@ -49,7 +51,7 @@ export default function Home() {
 
             {/* Main Title */}
             <h1 className="hero-simple-title">
-              트위터 썰 수집기
+              ThreadSaver : 트위터 썰 수집기
             </h1>
 
             {/* Subtitle */}
@@ -108,19 +110,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="footer-simple">
-        <div className="container-custom">
-          <div className="footer-simple-content">
-            <p>© 2025 StoryArchive. All rights reserved.</p>
-            <div className="footer-links">
-              <Link href="/series">시리즈</Link>
-              <Link href="/dashboard">대시보드</Link>
-              <Link href="/dashboard/import">Archive 가져오기</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   )
 }

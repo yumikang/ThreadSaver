@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { isValidTwitterUrl } from '@/lib/utils'
 import { FileArchive } from 'lucide-react'
+import { Header, Footer } from '@/components/Header'
 
 export default function DashboardPage() {
   const [twitterUrl, setTwitterUrl] = useState('')
@@ -99,8 +100,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <main className="dark-theme min-h-screen">
-      <div className="container-custom py-12 max-w-2xl">
+    <div className="dark-theme min-h-screen flex flex-col">
+      <Header />
+      <main className="container-custom py-12 max-w-2xl flex-1">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">창작자 대시보드</h1>
           <p className="text-muted-foreground">
@@ -217,7 +219,8 @@ export default function DashboardPage() {
             <p>4. 생성된 시리즈 페이지로 이동하여 확인하세요</p>
           </CardContent>
         </Card>
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   )
 }

@@ -5,6 +5,7 @@ import { Upload, FileArchive, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
+import { Header, Footer } from '@/components/Header'
 
 export default function ImportPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -43,8 +44,9 @@ export default function ImportPage() {
   }
 
   return (
-    <main className="dark-theme min-h-screen">
-      <div className="container-custom py-12 max-w-3xl">
+    <div className="dark-theme min-h-screen flex flex-col">
+      <Header />
+      <main className="container-custom py-12 max-w-3xl flex-1">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Twitter Archive 가져오기</h1>
           <p className="text-muted-foreground">
@@ -190,7 +192,8 @@ export default function ImportPage() {
           </div>
         </CardContent>
         </Card>
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </div>
   )
 }

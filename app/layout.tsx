@@ -3,8 +3,11 @@ import "./globals.css";
 import { Providers } from "@/lib/providers";
 
 export const metadata: Metadata = {
-  title: "StoryArchive - 트위터 창작물 아카이브",
-  description: "트위터 연재물을, 웹소설처럼 읽는다",
+  title: "ThreadSaver - 트위터 썰 수집기",
+  description: "흩어진 트위터 타래들을 한곳에 모아서 웹소설처럼 편하게 읽어보세요",
+  icons: {
+    icon: '/favicon.png',
+  },
 };
 
 export default function RootLayout({
