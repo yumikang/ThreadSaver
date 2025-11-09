@@ -90,7 +90,7 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="hero-buttons-simple">
-              <Button size="lg" className="btn-cta" asChild>
+              <Button size="lg" variant="outline" className="btn-cta-secondary" asChild>
                 <Link href="/series">시리즈 둘러보기</Link>
               </Button>
               <Button size="lg" variant="outline" className="btn-cta-secondary" asChild>
