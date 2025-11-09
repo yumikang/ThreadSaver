@@ -44,9 +44,7 @@ export default function Home() {
           <div className="hero-simple-content">
             {/* Icon */}
             <div className="hero-icon">
-              <div className="icon-background">
-                <img src="/heart-icon.png" alt="Heart Icon" className="heart-icon-img" />
-              </div>
+              <img src="/heart-icon.png" alt="Heart Icon" className="heart-icon-img" />
             </div>
 
             {/* Main Title */}
