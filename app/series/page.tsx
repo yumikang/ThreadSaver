@@ -17,7 +17,7 @@ async function getSeriesList() {
 }
 
 export default async function SeriesListPage() {
-  const { data: seriesList } = await getSeriesList()
+  const { data: seriesList = [] } = await getSeriesList()
 
   return (
     <main className="dark-theme min-h-screen">
@@ -29,7 +29,7 @@ export default async function SeriesListPage() {
           </p>
         </div>
 
-      {seriesList.length === 0 ? (
+      {!Array.isArray(seriesList) || seriesList.length === 0 ? (
         <Card className="text-center py-12">
           <CardHeader>
             <CardTitle>아직 등록된 시리즈가 없습니다</CardTitle>
