@@ -158,24 +158,37 @@ export async function POST(request: NextRequest) {
       seriesCreated: result.seriesCreated,
       username,
     })
-  } catch (error: any) {
+  } catch (error) {
     console.error('Archive import error:', error)
 
     // 에러 타입에 따른 메시지
     let errorMessage = 'Failed to process archive'
 
-    if (error.message?.includes('Invalid or unsupported zip format')) {
-      errorMessage = 'Invalid ZIP file format'
-    } else if (error.message?.includes('Unexpected end')) {
-      errorMessage = 'Archive file is corrupted or incomplete'
-    } else if (error.code === 'P2002') {
+    if (error instanceof Error) {
+      if (error.message?.includes('Invalid or unsupported zip format')) {
+        errorMessage = 'Invalid ZIP file format'
+      } else if (error.message?.includes('Unexpected end')) {
+        errorMessage = 'Archive file is corrupted or incomplete'
+      }
+
+      return NextResponse.json(
+        {
+          error: errorMessage,
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        },
+        { status: 400 }
+      )
+    }
+
+    // Handle Prisma errors
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
       errorMessage = 'Some tweets already exist in the database'
     }
 
     return NextResponse.json(
       {
         error: errorMessage,
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+        details: undefined,
       },
       { status: 500 }
     )

@@ -1,28 +1,57 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useSearchParams } from 'next/navigation'
+import { useParams, useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatNumber } from '@/lib/utils'
 import { Header, Footer } from '@/components/Header'
+import { Trash2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'
+import type { SeriesData, TweetData } from '@/lib/types'
+
+interface PaginationData {
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
+}
+
+interface ExtendedTweetData extends TweetData {
+  threadSequence: number
+}
 
 export default function SeriesReaderPage() {
   const params = useParams()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const slug = params.slug as string
   const page = parseInt(searchParams.get('page') || '1', 10)
 
-  const [series, setSeries] = useState<any>(null)
-  const [tweets, setTweets] = useState<any[]>([])
+  const [series, setSeries] = useState<SeriesData | null>(null)
+  const [tweets, setTweets] = useState<ExtendedTweetData[]>([])
   const [loading, setLoading] = useState(true)
-  const [pagination, setPagination] = useState<any>(null)
+  const [pagination, setPagination] = useState<PaginationData | null>(null)
   const [progress, setProgress] = useState(0)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchSeries()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, page])
 
   async function fetchSeries() {
@@ -37,9 +66,9 @@ export default function SeriesReaderPage() {
 
       // For MVP, we'll show all tweets in continuous scroll
       // In production, implement pagination
-      const allTweets: any[] = []
-      response.data.threads?.forEach((st: any) => {
-        st.thread.tweets.forEach((tweet: any) => {
+      const allTweets: ExtendedTweetData[] = []
+      response.data.threads?.forEach((st: { sequenceNumber: number; thread: { tweets: TweetData[] } }) => {
+        st.thread.tweets.forEach((tweet: TweetData) => {
           allTweets.push({
             ...tweet,
             threadSequence: st.sequenceNumber,
@@ -51,7 +80,10 @@ export default function SeriesReaderPage() {
       setPagination({
         total: allTweets.length,
         page: 1,
+        limit: allTweets.length,
         totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
       })
     } catch (error) {
       console.error('Error fetching series:', error)
@@ -71,6 +103,27 @@ export default function SeriesReaderPage() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  async function handleDelete() {
+    if (!series) return
+
+    setDeleting(true)
+    try {
+      const res = await fetch(`/api/series/${series.id}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) throw new Error('Failed to delete series')
+
+      // 삭제 성공 시 시리즈 목록으로 이동
+      router.push('/series')
+    } catch (error) {
+      console.error('Error deleting series:', error)
+      alert('시리즈 삭제에 실패했습니다.')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -126,9 +179,32 @@ export default function SeriesReaderPage() {
                 </p>
               </div>
             </div>
-            <Badge variant={series.status === 'completed' ? 'default' : 'secondary'}>
-              {series.status === 'completed' ? '완결' : '연재중'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={series.status === 'completed' ? 'default' : 'secondary'}>
+                {series.status === 'completed' ? '완결' : '연재중'}
+              </Badge>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" disabled={deleting}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>시리즈를 삭제하시겠습니까?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      이 작업은 되돌릴 수 없습니다. 시리즈와 관련된 모든 데이터가 영구적으로 삭제됩니다.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>취소</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} disabled={deleting}>
+                      {deleting ? '삭제 중...' : '삭제'}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
         <Progress value={progress} className="h-1 rounded-none" />

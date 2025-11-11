@@ -13,10 +13,10 @@ import type { SeriesData, UpdateSeriesRequest } from '@/lib/types'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Try to find by ID first, then by slug
     const series = await prisma.series.findFirst({
@@ -102,10 +102,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body: UpdateSeriesRequest = await request.json()
 
     const series = await prisma.series.findUnique({
@@ -155,10 +155,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const series = await prisma.series.findUnique({
       where: { id },

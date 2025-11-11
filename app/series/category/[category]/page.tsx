@@ -1,23 +1,15 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Header, Footer } from '@/components/Header'
-import { ChevronLeft } from 'lucide-react'
-
-async function getSeriesList() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/series?limit=1000`, {
-      cache: 'no-store',
-    })
-    if (!res.ok) return { data: [], pagination: {} }
-    const response = await res.json()
-    return response.data || { data: [], pagination: {} }
-  } catch (error) {
-    console.error('Failed to fetch series:', error)
-    return { data: [], pagination: {} }
-  }
-}
+import { ChevronLeft, Search } from 'lucide-react'
+import type { SeriesData } from '@/lib/types'
 
 // 트윗 개수에 따른 카테고리 분류
 function getCategory(tweetCount: number) {
@@ -34,9 +26,34 @@ const categoryMap = {
   'jungpyeon': { name: '중장편', color: 'bg-purple-500', emoji: '📚', description: '20트윗 이상의 긴 이야기' },
 }
 
-export default async function CategoryPage({ params }: { params: { category: string } }) {
-  const { data: seriesList = [] } = await getSeriesList()
-  const categoryInfo = categoryMap[params.category as keyof typeof categoryMap]
+export default function CategoryPage() {
+  const params = useParams()
+  const category = params.category as string
+
+  const [seriesList, setSeriesList] = useState<SeriesData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const categoryInfo = categoryMap[category as keyof typeof categoryMap]
+
+  useEffect(() => {
+    fetchSeries()
+  }, [])
+
+  async function fetchSeries() {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/series?limit=1000')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const response = await res.json()
+      setSeriesList(response.data?.data || [])
+    } catch (error) {
+      console.error('Failed to fetch series:', error)
+      setSeriesList([])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!categoryInfo) {
     return (
@@ -54,9 +71,20 @@ export default async function CategoryPage({ params }: { params: { category: str
   }
 
   // 해당 카테고리의 시리즈만 필터링
-  const filteredSeries = seriesList.filter((series: any) =>
+  const filteredByCategory = seriesList.filter((series) =>
     getCategory(series.totalTweets) === categoryInfo.name
   )
+
+  // 검색어로 추가 필터링
+  const filteredSeries = filteredByCategory.filter((series) => {
+    if (!searchQuery.trim()) return true
+    const query = searchQuery.toLowerCase()
+    return (
+      series.title.toLowerCase().includes(query) ||
+      series.description?.toLowerCase().includes(query) ||
+      series.authorUsername.toLowerCase().includes(query)
+    )
+  })
 
   return (
     <div className="dark-theme min-h-screen flex flex-col">
@@ -81,22 +109,52 @@ export default async function CategoryPage({ params }: { params: { category: str
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <span className="text-2xl font-bold text-foreground">{filteredSeries.length}</span>
+          <div className="flex items-center gap-2 text-muted-foreground mb-6">
+            <span className="text-2xl font-bold text-white">
+              {loading ? '...' : filteredByCategory.length}
+            </span>
             <span>개의 시리즈</span>
+            {searchQuery && (
+              <span className="ml-2 text-sm">
+                (검색 결과: {filteredSeries.length}개)
+              </span>
+            )}
+          </div>
+
+          {/* 검색창 */}
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="제목, 설명, 작성자로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
 
         {/* 시리즈 목록 */}
-        {filteredSeries.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">로딩 중...</p>
+          </div>
+        ) : filteredSeries.length === 0 ? (
           <Card className="text-center py-12">
             <CardHeader>
-              <CardTitle>이 카테고리에는 아직 시리즈가 없습니다</CardTitle>
+              <CardTitle>
+                {searchQuery ? '검색 결과가 없습니다' : '이 카테고리에는 아직 시리즈가 없습니다'}
+              </CardTitle>
+              {searchQuery && (
+                <CardDescription>
+                  다른 검색어를 시도해보세요
+                </CardDescription>
+              )}
             </CardHeader>
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSeries.map((series: any) => (
+            {filteredSeries.map((series) => (
               <Link key={series.id} href={`/series/${series.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                   <CardHeader>

@@ -52,6 +52,7 @@ export interface CreateSeriesRequest {
   authorUsername: string
   slug?: string
   status?: 'ongoing' | 'completed' | 'hiatus'
+  [key: string]: unknown
 }
 
 export interface UpdateSeriesRequest {
@@ -65,6 +66,7 @@ export interface UpdateSeriesRequest {
 export interface AddThreadToSeriesRequest {
   threadUrl: string
   sequenceNumber?: number
+  [key: string]: unknown
 }
 
 // Bookmark Types
@@ -81,6 +83,7 @@ export interface CreateBookmarkRequest {
   seriesId: string
   tweetId: string
   note?: string
+  [key: string]: unknown
 }
 
 // Reading Progress Types
@@ -97,11 +100,13 @@ export interface UpdateReadingProgressRequest {
   seriesId: string
   lastReadTweetId: string
   progressPercentage: number
+  [key: string]: unknown
 }
 
 // Scraper Types
 export interface ScrapeRequest {
   tweetUrl: string
+  [key: string]: unknown
 }
 
 export interface ScrapeResponse {

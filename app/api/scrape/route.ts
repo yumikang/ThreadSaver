@@ -9,6 +9,24 @@ import {
 import { isValidTwitterUrl, extractTweetId } from '@/lib/utils'
 import type { ScrapeRequest, ScrapeResponse, ThreadData } from '@/lib/types'
 
+interface ScraperTweetData {
+  id: string
+  content: string
+  created_at: string
+  author_username: string
+  reply_to_id?: string
+  retweet_count?: number
+  like_count?: number
+  media_urls?: string[]
+}
+
+interface ScraperResponseData {
+  conversation_id: string
+  author_username: string
+  author_name?: string
+  tweets: ScraperTweetData[]
+}
+
 /**
  * POST /api/scrape
  * Collect a Twitter thread and save to database
@@ -51,7 +69,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const scraperData = await scraperResponse.json()
+    const scraperData: ScraperResponseData = await scraperResponse.json()
 
     // Check if thread already exists
     const existingThread = await prisma.thread.findUnique({
@@ -100,7 +118,7 @@ export async function POST(request: NextRequest) {
         firstTweetUrl: body.tweetUrl,
         firstTweetDate: new Date(scraperData.tweets[0].created_at),
         tweets: {
-          create: scraperData.tweets.map((tweet: any, index: number) => ({
+          create: scraperData.tweets.map((tweet, index) => ({
             id: BigInt(tweet.id),
             content: tweet.content,
             createdAt: new Date(tweet.created_at),

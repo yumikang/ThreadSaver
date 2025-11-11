@@ -44,13 +44,13 @@ export function handleApiError(error: unknown): NextResponse<ApiResponse> {
 /**
  * Validate required fields
  */
-export function validateRequiredFields(
-  data: Record<string, unknown>,
-  fields: string[]
+export function validateRequiredFields<T extends Record<string, unknown>>(
+  data: T,
+  fields: (keyof T)[]
 ): string | null {
   for (const field of fields) {
     if (!data[field]) {
-      return `Missing required field: ${field}`
+      return `Missing required field: ${String(field)}`
     }
   }
   return null

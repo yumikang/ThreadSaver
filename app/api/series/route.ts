@@ -139,8 +139,24 @@ async function createSeries(body: CreateSeriesRequest, slug: string) {
   })
 }
 
+interface PrismaSeriesData {
+  id: string
+  authorUsername: string
+  title: string
+  description: string | null
+  coverImageUrl: string | null
+  status: string
+  totalTweets: number
+  totalThreads: number
+  totalViews: number
+  slug: string
+  isPublic: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+
 // Helper function to map Prisma series to SeriesData
-function mapSeriesToData(series: any): SeriesData {
+function mapSeriesToData(series: PrismaSeriesData): SeriesData {
   return {
     id: series.id,
     authorUsername: series.authorUsername,

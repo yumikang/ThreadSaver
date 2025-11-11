@@ -1,21 +1,10 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Header, Footer } from '@/components/Header'
-import { ChevronRight } from 'lucide-react'
-
-async function getSeriesList() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/series?limit=1000`, {
-      cache: 'no-store',
-    })
-    if (!res.ok) return { data: [], pagination: {} }
-    const response = await res.json()
-    return response.data || { data: [], pagination: {} }
-  } catch (error) {
-    console.error('Failed to fetch series:', error)
-    return { data: [], pagination: {} }
-  }
-}
+import type { SeriesData } from '@/lib/types'
 
 // 트윗 개수에 따른 카테고리 분류
 function getCategory(tweetCount: number) {
@@ -26,15 +15,15 @@ function getCategory(tweetCount: number) {
 }
 
 // 카테고리별로 시리즈 그룹화
-function groupSeriesByCategory(seriesList: any[]) {
+function groupSeriesByCategory(seriesList: SeriesData[]) {
   const grouped = {
-    '잡썰': [] as any[],
-    '짧썰': [] as any[],
-    '단편': [] as any[],
-    '중장편': [] as any[],
+    '잡썰': [] as SeriesData[],
+    '짧썰': [] as SeriesData[],
+    '단편': [] as SeriesData[],
+    '중장편': [] as SeriesData[],
   }
 
-  seriesList.forEach((series: any) => {
+  seriesList.forEach((series) => {
     const category = getCategory(series.totalTweets)
     grouped[category as keyof typeof grouped].push(series)
   })
@@ -49,8 +38,29 @@ const categories = [
   { name: '중장편', slug: 'jungpyeon', description: '20트윗 이상의 긴 이야기', color: 'bg-purple-500', emoji: '📚' },
 ]
 
-export default async function SeriesListPage() {
-  const { data: seriesList = [] } = await getSeriesList()
+export default function SeriesListPage() {
+  const [seriesList, setSeriesList] = useState<SeriesData[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchSeries()
+  }, [])
+
+  async function fetchSeries() {
+    try {
+      setLoading(true)
+      const res = await fetch('/api/series?limit=1000')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const response = await res.json()
+      setSeriesList(response.data?.data || [])
+    } catch (error) {
+      console.error('Failed to fetch series:', error)
+      setSeriesList([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const groupedSeries = groupSeriesByCategory(seriesList)
 
   return (
@@ -64,7 +74,11 @@ export default async function SeriesListPage() {
           </p>
         </div>
 
-      {!Array.isArray(seriesList) || seriesList.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">로딩 중...</p>
+        </div>
+      ) : seriesList.length === 0 ? (
         <Card className="text-center py-12">
           <CardHeader>
             <CardTitle>아직 등록된 시리즈가 없습니다</CardTitle>

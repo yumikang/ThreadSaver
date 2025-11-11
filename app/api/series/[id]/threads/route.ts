@@ -15,10 +15,10 @@ import type { AddThreadToSeriesRequest } from '@/lib/types'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: seriesId } = params
+    const { id: seriesId } = await params
     const body: AddThreadToSeriesRequest = await request.json()
 
     // Validate required fields
@@ -142,10 +142,10 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: seriesId } = params
+    const { id: seriesId } = await params
     const { searchParams } = new URL(request.url)
     const threadId = searchParams.get('threadId')
 

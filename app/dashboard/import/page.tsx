@@ -76,7 +76,7 @@ export default function ImportPage() {
                 바로가기 →
               </a>
             </li>
-            <li>"데이터 및 권한" → "데이터 아카이브 다운로드" 클릭</li>
+            <li>&quot;데이터 및 권한&quot; → &quot;데이터 아카이브 다운로드&quot; 클릭</li>
             <li>본인 확인 후 요청 제출 (이메일로 ZIP 파일 수신, 24시간 소요)</li>
             <li>이메일에서 다운로드한 ZIP 파일을 아래에 업로드</li>
           </ol>

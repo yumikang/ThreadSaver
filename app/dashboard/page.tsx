@@ -215,7 +215,7 @@ export default function DashboardPage() {
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>1. 트위터에서 아카이브하고 싶은 타래의 URL을 복사하세요</p>
             <p>2. 위 폼에 URL과 시리즈 정보를 입력하세요</p>
-            <p>3. '시리즈 만들기' 버튼을 클릭하면 자동으로 타래가 수집됩니다</p>
+            <p>3. &apos;시리즈 만들기&apos; 버튼을 클릭하면 자동으로 타래가 수집됩니다</p>
             <p>4. 생성된 시리즈 페이지로 이동하여 확인하세요</p>
           </CardContent>
         </Card>
