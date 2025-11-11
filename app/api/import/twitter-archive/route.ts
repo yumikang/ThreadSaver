@@ -10,9 +10,10 @@ export const maxDuration = 60 // 최대 60초 실행 시간
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. FormData에서 파일 가져오기
+    // 1. FormData에서 파일과 모드 가져오기
     const formData = await request.formData()
     const file = formData.get('archive') as File
+    const mode = (formData.get('mode') as string) || 'zip'
 
     if (!file) {
       return NextResponse.json(
@@ -21,64 +22,92 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!file.name.endsWith('.zip')) {
-      return NextResponse.json(
-        { error: 'File must be a ZIP archive' },
-        { status: 400 }
-      )
-    }
+    console.log(`Processing file: ${file.name} (${file.size} bytes), mode: ${mode}`)
 
-    console.log(`Processing archive: ${file.name} (${file.size} bytes)`)
-
-    // 2. ZIP 파일 로드
-    const arrayBuffer = await file.arrayBuffer()
-    const zip = await JSZip.loadAsync(arrayBuffer)
-
-    // 3. tweets.js 또는 tweet.js 파일 찾기
-    let tweetsFile = zip.file('data/tweets.js') || zip.file('data/tweet.js')
-
-    // 다양한 경로 시도
-    if (!tweetsFile) {
-      const allFiles = Object.keys(zip.files)
-      const tweetsFilePath = allFiles.find(
-        (path) =>
-          path.endsWith('tweets.js') ||
-          path.endsWith('tweet.js') ||
-          path.includes('tweets.js') ||
-          path.includes('tweet.js')
-      )
-
-      if (tweetsFilePath) {
-        tweetsFile = zip.file(tweetsFilePath)
-      }
-    }
-
-    if (!tweetsFile) {
-      return NextResponse.json(
-        {
-          error:
-            'tweets.js not found in archive. Please ensure you uploaded a valid Twitter archive.',
-        },
-        { status: 400 }
-      )
-    }
-
-    // 4. profile.js에서 사용자명 추출 (선택사항)
+    let tweetsContent = ''
     let username = 'archived_user'
-    const profileFile = zip.file('data/profile.js') || zip.file('data/account.js')
 
-    if (profileFile) {
-      try {
-        const profileContent = await profileFile.async('text')
-        username = extractUsernameFromProfile(profileContent)
-        console.log(`Extracted username: ${username}`)
-      } catch (error) {
-        console.warn('Failed to extract username from profile, using default')
+    // 2. 모드에 따라 다른 처리
+    if (mode === 'js') {
+      // tweets.js 파일을 직접 업로드한 경우
+      if (!file.name.endsWith('.js')) {
+        return NextResponse.json(
+          { error: 'File must be a .js file' },
+          { status: 400 }
+        )
       }
-    }
 
-    // 5. tweets.js 파일 내용 읽기
-    const tweetsContent = await tweetsFile.async('text')
+      // 파일 내용을 직접 읽기
+      const arrayBuffer = await file.arrayBuffer()
+      tweetsContent = new TextDecoder('utf-8').decode(arrayBuffer)
+      console.log('Successfully read tweets.js file')
+    } else {
+      // ZIP 파일 처리 (기존 로직)
+      if (!file.name.endsWith('.zip')) {
+        return NextResponse.json(
+          { error: 'File must be a ZIP archive' },
+          { status: 400 }
+        )
+      }
+
+      // ZIP 파일 로드 (CRC32 체크 비활성화로 더 관대하게 처리)
+      const arrayBuffer = await file.arrayBuffer()
+      const zip = await JSZip.loadAsync(arrayBuffer, {
+        checkCRC32: false, // CRC32 체크 비활성화
+        optimizedBinaryString: true,
+      })
+
+      console.log('ZIP loaded successfully, file count:', Object.keys(zip.files).length)
+
+      // tweets.js 또는 tweet.js 파일 찾기
+      let tweetsFile = zip.file('data/tweets.js') || zip.file('data/tweet.js')
+
+      // 다양한 경로 시도
+      if (!tweetsFile) {
+        const allFiles = Object.keys(zip.files)
+        console.log('Searching for tweets.js in:', allFiles.slice(0, 10), '...')
+
+        const tweetsFilePath = allFiles.find(
+          (path) =>
+            path.endsWith('tweets.js') ||
+            path.endsWith('tweet.js') ||
+            path.includes('tweets.js') ||
+            path.includes('tweet.js')
+        )
+
+        if (tweetsFilePath) {
+          tweetsFile = zip.file(tweetsFilePath)
+          console.log('Found tweets file at:', tweetsFilePath)
+        }
+      }
+
+      if (!tweetsFile) {
+        return NextResponse.json(
+          {
+            error:
+              'tweets.js not found in archive. Please ensure you uploaded a valid Twitter archive.',
+          },
+          { status: 400 }
+        )
+      }
+
+      // profile.js에서 사용자명 추출 (선택사항)
+      const profileFile = zip.file('data/profile.js') || zip.file('data/account.js')
+
+      if (profileFile) {
+        try {
+          const profileContent = await profileFile.async('text')
+          username = extractUsernameFromProfile(profileContent)
+          console.log(`Extracted username: ${username}`)
+        } catch (error) {
+          console.warn('Failed to extract username from profile, using default')
+        }
+      }
+
+      // tweets.js 파일 내용 읽기
+      console.log('Reading tweets.js file from ZIP...')
+      tweetsContent = await tweetsFile.async('text')
+    }
 
     // 6. JavaScript 파싱 (window.YTD... 제거)
     const jsonString = tweetsContent
