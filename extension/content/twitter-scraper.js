@@ -29,31 +29,53 @@ function wait(ms) {
 
 // 스크롤하여 모든 트윗 로드
 async function loadAllTweets() {
-  const maxScrolls = 50;
-  let previousHeight = 0;
+  const maxScrolls = 100; // 최대 스크롤 횟수 증가
+  let previousTweetCount = 0;
+  let stableCount = 0; // 트윗 개수가 변하지 않은 횟수
   let scrollCount = 0;
 
   console.log('ThreadSaver: Loading all tweets...');
 
   while (scrollCount < maxScrolls) {
-    const currentHeight = document.documentElement.scrollHeight;
+    // 현재 트윗 개수 확인
+    const currentTweetCount = document.querySelectorAll('article[data-testid="tweet"]').length;
 
-    // 더 이상 로드할 콘텐츠가 없으면 중단
-    if (currentHeight === previousHeight) {
-      break;
+    // 트윗 개수가 변하지 않으면 카운트 증가
+    if (currentTweetCount === previousTweetCount) {
+      stableCount++;
+      // 3번 연속 변화 없으면 종료
+      if (stableCount >= 3) {
+        console.log('ThreadSaver: No more tweets loading, stopping');
+        break;
+      }
+    } else {
+      stableCount = 0; // 변화가 있으면 리셋
+      previousTweetCount = currentTweetCount;
     }
 
-    previousHeight = currentHeight;
-    window.scrollTo(0, currentHeight);
-    await wait(500);
+    // 스크롤
+    window.scrollTo(0, document.documentElement.scrollHeight);
+
+    // 충분한 대기 시간 (트위터가 트윗을 로드하는 시간)
+    await wait(1000);
+
     scrollCount++;
+
+    // 진행 상황 로그
+    if (scrollCount % 10 === 0) {
+      console.log(`ThreadSaver: Scroll ${scrollCount}, found ${currentTweetCount} tweets`);
+    }
   }
+
+  // 마지막으로 한 번 더 대기 (로딩 완료 확인)
+  await wait(1000);
 
   // 맨 위로 스크롤
   window.scrollTo(0, 0);
   await wait(500);
 
-  console.log(`ThreadSaver: Loaded tweets after ${scrollCount} scrolls`);
+  const finalCount = document.querySelectorAll('article[data-testid="tweet"]').length;
+  console.log(`ThreadSaver: Loaded ${finalCount} tweets after ${scrollCount} scrolls`);
 }
 
 // 트윗 요소들 찾기
