@@ -96,13 +96,42 @@ export async function POST(request: NextRequest) {
 
     console.log(`Thread ${thread.id} created with ${tweets.length} tweets`)
 
+    // Create Series from thread
+    const slug = `${firstTweet.authorUsername}-${conversationId}`.toLowerCase()
+    const seriesTitle = tweets[0]?.content?.slice(0, 100) || `${firstTweet.authorUsername}의 타래`
+
+    const series = await prisma.series.create({
+      data: {
+        authorUsername: firstTweet.authorUsername || 'unknown',
+        title: seriesTitle,
+        description: tweets[0]?.content || '',
+        slug,
+        status: 'completed',
+        totalTweets: tweets.length,
+        totalThreads: 1,
+        isPublic: true,
+      },
+    })
+
+    // Link thread to series
+    await prisma.seriesThread.create({
+      data: {
+        seriesId: series.id,
+        threadId: thread.id,
+        sequenceNumber: 1,
+      },
+    })
+
+    console.log(`Series ${series.id} created and linked to thread ${thread.id}`)
+
     return successResponse(
       {
         threadId: thread.id,
+        seriesId: series.id,
         conversationId: thread.conversationId,
         tweetCount: tweets.length,
       },
-      'Thread saved successfully'
+      'Thread and series saved successfully'
     )
   } catch (error: any) {
     console.error('Extension scrape error:', error)
