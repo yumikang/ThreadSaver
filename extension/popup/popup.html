@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ThreadSaver</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1 class="title">🧵 ThreadSaver</h1>
+      <p class="subtitle">트위터 타래를 저장하세요</p>
+    </div>
+
+    <!-- Status Section -->
+    <div class="status-section">
+      <div class="status-item">
+        <span class="status-label">현재 페이지:</span>
+        <span class="status-value" id="pageStatus">확인 중...</span>
+      </div>
+      <div class="status-item">
+        <span class="status-label">감지된 트윗:</span>
+        <span class="status-value" id="tweetCount">-</span>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions">
+      <button id="extractBtn" class="btn btn-primary" disabled>
+        <span class="btn-icon">📥</span>
+        <span class="btn-text">타래 추출하기</span>
+      </button>
+
+      <button id="saveBtn" class="btn btn-secondary" disabled>
+        <span class="btn-icon">💾</span>
+        <span class="btn-text">서버에 저장하기</span>
+      </button>
+    </div>
+
+    <!-- Progress -->
+    <div id="progressSection" class="progress-section" style="display: none;">
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+      <p id="progressText" class="progress-text">처리 중...</p>
+    </div>
+
+    <!-- Message -->
+    <div id="messageSection" class="message-section" style="display: none;">
+      <p id="messageText" class="message-text"></p>
+    </div>
+
+    <!-- Settings -->
+    <div class="settings-section">
+      <div class="setting-item">
+        <label for="serverUrl" class="setting-label">서버 URL:</label>
+        <input
+          type="text"
+          id="serverUrl"
+          class="setting-input"
+          value="http://localhost:3001"
+          placeholder="http://localhost:3001"
+        >
+      </div>
+      <button id="saveSettingsBtn" class="btn btn-small">
+        <span class="btn-icon">⚙️</span>
+        <span class="btn-text">설정 저장</span>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p class="footer-text">Made with ❤️ for Twitter threads</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
