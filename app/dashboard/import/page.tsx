@@ -22,6 +22,7 @@ export default function ImportPage() {
 
     const formData = new FormData()
     formData.append('archive', file)
+    formData.append('mode', 'js')
 
     try {
       const res = await fetch('/api/import/twitter-archive', {
@@ -88,19 +89,29 @@ export default function ImportPage() {
       {/* 업로드 영역 */}
       <Card>
         <CardHeader>
-          <CardTitle>ZIP 파일 업로드</CardTitle>
+          <CardTitle>tweets.js 파일 업로드</CardTitle>
           <CardDescription>
-            Twitter에서 받은 아카이브 ZIP 파일을 선택하세요
+            Twitter Archive에서 추출한 tweets.js 파일을 업로드하세요
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* 설명 */}
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-md text-sm text-blue-800">
+            <p className="font-semibold mb-1">tweets.js 파일 찾기:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>다운로드한 ZIP 파일을 압축 해제</li>
+              <li><code className="bg-yellow-300 text-gray-900 px-2 py-0.5 rounded font-bold">data/tweets.js</code> 또는 <code className="bg-yellow-300 text-gray-900 px-2 py-0.5 rounded font-bold">data/tweet.js</code> 파일 찾기</li>
+              <li>해당 파일을 아래에 업로드</li>
+            </ol>
+          </div>
+
           {/* 파일 선택 */}
           <div className="border-2 border-dashed rounded-lg p-12 text-center hover:border-primary/50 transition-colors">
             <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
 
             <input
               type="file"
-              accept=".zip"
+              accept=".js"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
               id="archive-upload"
@@ -110,7 +121,7 @@ export default function ImportPage() {
             <label htmlFor="archive-upload">
               <Button variant="outline" asChild disabled={importing}>
                 <span className="cursor-pointer">
-                  {file ? '다른 파일 선택' : 'ZIP 파일 선택'}
+                  {file ? '다른 파일 선택' : 'tweets.js 파일 선택'}
                 </span>
               </Button>
             </label>

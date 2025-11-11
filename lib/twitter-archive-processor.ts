@@ -31,17 +31,40 @@ export async function processTwitterArchive(
 ): Promise<ProcessResult> {
   console.log(`Processing ${tweetsData.length} tweets from archive...`)
 
-  // 1. 트윗을 Map으로 변환 (빠른 조회를 위해)
+  // 1. 기존 트윗 ID 조회 (중복 방지)
+  const existingTweetIds = await prisma.tweet.findMany({
+    where: { authorUsername: username },
+    select: { id: true },
+  })
+  const existingIdsSet = new Set(existingTweetIds.map(t => t.id.toString()))
+  console.log(`Found ${existingIdsSet.size} existing tweets for ${username}`)
+
+  // 2. 새로운 트윗만 필터링
+  const newTweetsData = tweetsData.filter(
+    t => !existingIdsSet.has(t.tweet.id)
+  )
+  console.log(`${newTweetsData.length} new tweets to process (${tweetsData.length - newTweetsData.length} duplicates skipped)`)
+
+  if (newTweetsData.length === 0) {
+    console.log('No new tweets to process')
+    return {
+      threadsFound: 0,
+      seriesCreated: 0,
+      totalTweets: tweetsData.length,
+    }
+  }
+
+  // 3. 새 트윗을 Map으로 변환 (빠른 조회를 위해)
   const tweetMap = new Map(
-    tweetsData.map((t) => [t.tweet.id, t.tweet])
+    newTweetsData.map((t) => [t.tweet.id, t.tweet])
   )
 
-  // 2. 타래 감지 (reply_to 체인 기반)
+  // 4. 타래 감지 (reply_to 체인 기반)
   const threads = detectThreads(tweetMap)
 
-  console.log(`Detected ${threads.size} threads from archive`)
+  console.log(`Detected ${threads.size} threads from new tweets`)
 
-  // 3. DB에 저장
+  // 5. DB에 저장
   let seriesCreated = 0
 
   for (const [firstId, tweetIds] of threads) {
@@ -80,9 +103,45 @@ export async function processTwitterArchive(
         data: tweetsToCreate,
       })
 
+      // Series 생성 (각 Thread마다 하나의 Series)
+      // 안전한 제목 생성 (특수문자 제거)
+      const rawTitle = firstTweet.full_text
+        .slice(0, 50)
+        .replace(/\n/g, ' ')
+        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // 제어 문자 제거
+        .replace(/[\\]/g, '') // 백슬래시 제거
+        .trim()
+
+      const seriesTitle = rawTitle.length > 0
+        ? rawTitle + (firstTweet.full_text.length > 50 ? '...' : '')
+        : `타래 #${firstId.slice(-8)}`
+
+      const seriesSlug = `${username}-${firstId}`
+
+      const series = await prisma.series.create({
+        data: {
+          authorUsername: username,
+          title: seriesTitle,
+          description: `${tweetIds.length}개의 트윗으로 구성된 타래`,
+          slug: seriesSlug,
+          totalTweets: tweetIds.length,
+          totalThreads: 1,
+          isPublic: true,
+        },
+      })
+
+      // SeriesThread 연결
+      await prisma.seriesThread.create({
+        data: {
+          seriesId: series.id,
+          threadId: thread.id,
+          sequenceNumber: 1,
+        },
+      })
+
       seriesCreated++
       console.log(
-        `Created thread ${thread.id} with ${tweetIds.length} tweets`
+        `Created thread ${thread.id} with ${tweetIds.length} tweets and series ${series.id}`
       )
     } catch (error) {
       console.error(`Failed to create thread for ${firstId}:`, error)

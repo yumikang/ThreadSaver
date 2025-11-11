@@ -77,7 +77,20 @@ export async function GET(
       updatedAt: series.updatedAt,
     }
 
-    return successResponse({ ...seriesData, threads: series.seriesThreads })
+    // Convert BigInt to String for JSON serialization
+    const threadsWithStringIds = series.seriesThreads.map(st => ({
+      ...st,
+      thread: {
+        ...st.thread,
+        tweets: st.thread.tweets.map(tweet => ({
+          ...tweet,
+          id: tweet.id.toString(),
+          replyToId: tweet.replyToId ? tweet.replyToId.toString() : null,
+        })),
+      },
+    }))
+
+    return successResponse({ ...seriesData, threads: threadsWithStringIds })
   } catch (error) {
     return handleApiError(error)
   }

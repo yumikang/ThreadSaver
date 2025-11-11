@@ -31,13 +31,14 @@ export default function SeriesReaderPage() {
       const res = await fetch(`/api/series/${slug}`)
       if (!res.ok) throw new Error('Failed to fetch series')
 
-      const data = await res.json()
-      setSeries(data.data)
+      const response = await res.json()
+      // API response structure: { success: true, data: { ...seriesData, threads: [...] } }
+      setSeries(response.data)
 
       // For MVP, we'll show all tweets in continuous scroll
       // In production, implement pagination
       const allTweets: any[] = []
-      data.data.threads?.forEach((st: any) => {
+      response.data.threads?.forEach((st: any) => {
         st.thread.tweets.forEach((tweet: any) => {
           allTweets.push({
             ...tweet,
@@ -151,9 +152,9 @@ export default function SeriesReaderPage() {
         </div>
 
         {/* Tweets */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {tweets.map((tweet, index) => (
-            <div key={tweet.id} className="group">
+            <div key={tweet.id}>
               {index === 0 || tweets[index - 1].threadSequence !== tweet.threadSequence ? (
                 <div className="flex items-center gap-4 my-8 text-sm text-muted-foreground">
                   <div className="h-px flex-1 bg-border" />
@@ -162,30 +163,22 @@ export default function SeriesReaderPage() {
                 </div>
               ) : null}
 
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold">
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <p className="text-base leading-relaxed whitespace-pre-wrap">
-                    {tweet.content}
-                  </p>
-                  {tweet.mediaUrls && tweet.mediaUrls.length > 0 && (
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {tweet.mediaUrls.map((url: string, i: number) => (
-                        <img
-                          key={i}
-                          src={url}
-                          alt=""
-                          className="rounded-lg w-full"
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {formatDate(new Date(tweet.createdAt))}
-                  </p>
-                </div>
+              <div>
+                <p className="text-base leading-relaxed whitespace-pre-wrap">
+                  {tweet.content}
+                </p>
+                {tweet.mediaUrls && tweet.mediaUrls.length > 0 && (
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    {tweet.mediaUrls.map((url: string, i: number) => (
+                      <img
+                        key={i}
+                        src={url}
+                        alt=""
+                        className="rounded-lg w-full"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ))}
