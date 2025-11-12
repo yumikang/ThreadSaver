@@ -545,7 +545,7 @@ function parseTweetElement(article, index) {
 }
 
 // 타래 전체 추출 - 증분 추출 방식
-async function extractThreadData() {
+async function extractThreadData(botAvoidance = true) {
   if (!isTwitterPage() || !isThreadPage()) {
     return { error: 'Not a Twitter thread page' };
   }
@@ -565,8 +565,13 @@ async function extractThreadData() {
   // 🤖 봇 회피: Rate Limit Manager 초기화
   const rateLimiter = new RateLimitManager();
 
-  console.log('🧵 ThreadSaver: Starting HUMAN-LIKE extraction with anti-bot measures...');
-  console.log('🤖 봇 회피 모드: 활성화 (랜덤 타이밍, 가변 스크롤, 마우스 시뮬레이션)');
+  if (botAvoidance) {
+    console.log('🧵 ThreadSaver: Starting HUMAN-LIKE extraction with anti-bot measures...');
+    console.log('🤖 봇 회피 모드: 활성화 (랜덤 타이밍, 가변 스크롤, 마우스 시뮬레이션)');
+  } else {
+    console.log('🧵 ThreadSaver: Starting FAST extraction (bot avoidance disabled)');
+    console.log('⚠️ 봇 회피 모드: 비활성화 (빠르지만 차단 위험 증가)');
+  }
 
   const maxScrolls = 200; // 매우 긴 타래 지원
   let scrollCount = 0;
@@ -602,7 +607,7 @@ async function extractThreadData() {
     const buttonsClicked = clickShowMoreButtons();
     if (buttonsClicked > 0) {
       console.log(`🔘 Clicked ${buttonsClicked} buttons`);
-      const buttonDelay = getHumanDelay(); // 🤖 랜덤 딜레이
+      const buttonDelay = botAvoidance ? getHumanDelay() : 1000; // 🤖 봇 회피 ON/OFF
       console.log(`⏳ 버튼 클릭 후 대기: ${(buttonDelay / 1000).toFixed(1)}초`);
       await wait(buttonDelay);
       noChangeCount = 0;
@@ -627,29 +632,37 @@ async function extractThreadData() {
       break;
     }
 
-    // 🤖 봇 회피 스크롤 (핵심!)
-    const scrollDirection = shouldScrollUp();
+    // 스크롤 (봇 회피 모드에 따라 다르게 동작)
+    if (botAvoidance) {
+      // 🤖 봇 회피 스크롤 (핵심!)
+      const scrollDirection = shouldScrollUp();
 
-    if (scrollDirection) {
-      // 15% 확률로 위로 스크롤 (자연스럽게)
-      const upDistance = getScrollUpDistance();
-      smoothScrollBy(upDistance, 400);
-      console.log(`⬆️ 위로 스크롤: ${Math.abs(upDistance)}px (재확인 시뮬레이션)`);
+      if (scrollDirection) {
+        // 15% 확률로 위로 스크롤 (자연스럽게)
+        const upDistance = getScrollUpDistance();
+        smoothScrollBy(upDistance, 400);
+        console.log(`⬆️ 위로 스크롤: ${Math.abs(upDistance)}px (재확인 시뮬레이션)`);
+      } else {
+        // 아래로 스크롤 (가변 거리)
+        const scrollDistance = getRandomScrollDistance();
+        const scrollDuration = 300 + Math.random() * 500; // 300-800ms
+        smoothScrollBy(scrollDistance, scrollDuration);
+        console.log(`⬇️ 아래로 스크롤: ${Math.round(scrollDistance)}px (${Math.round(scrollDuration)}ms)`);
+      }
+
+      // 🤖 마우스 움직임 시뮬레이션 (30% 확률)
+      simulateMouseMove();
+
+      // 🤖 인간적인 랜덤 딜레이
+      const humanDelay = getHumanDelay();
+      console.log(`⏰ 대기 시간: ${(humanDelay / 1000).toFixed(1)}초`);
+      await wait(humanDelay);
     } else {
-      // 아래로 스크롤 (가변 거리)
-      const scrollDistance = getRandomScrollDistance();
-      const scrollDuration = 300 + Math.random() * 500; // 300-800ms
-      smoothScrollBy(scrollDistance, scrollDuration);
-      console.log(`⬇️ 아래로 스크롤: ${Math.round(scrollDistance)}px (${Math.round(scrollDuration)}ms)`);
+      // ⚡ 빠른 모드: 고정 스크롤
+      window.scrollBy(0, window.innerHeight * 0.8);
+      console.log(`⬇️ 빠른 스크롤: ${Math.round(window.innerHeight * 0.8)}px`);
+      await wait(1500); // 고정 1.5초
     }
-
-    // 🤖 마우스 움직임 시뮬레이션 (30% 확률)
-    simulateMouseMove();
-
-    // 🤖 인간적인 랜덤 딜레이
-    const humanDelay = getHumanDelay();
-    console.log(`⏰ 대기 시간: ${(humanDelay / 1000).toFixed(1)}초`);
-    await wait(humanDelay);
 
     scrollCount++;
   }
@@ -696,7 +709,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'EXTRACT_THREAD') {
     console.log('🧵 ThreadSaver: Starting thread extraction...');
 
-    extractThreadData()
+    // 봇 회피 설정 받기 (기본값 true)
+    const botAvoidance = message.botAvoidance !== undefined ? message.botAvoidance : true;
+    console.log('🤖 Bot avoidance mode:', botAvoidance ? 'ENABLED' : 'DISABLED');
+
+    extractThreadData(botAvoidance)
       .then(result => {
         console.log('🧵 ThreadSaver: ✅ Extraction complete!', result);
         sendResponse({ success: true, data: result });

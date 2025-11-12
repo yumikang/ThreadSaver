@@ -59,6 +59,7 @@
         <div id="progressFill" class="progress-fill"></div>
       </div>
       <p id="progressText" class="progress-text">처리 중...</p>
+      <p class="progress-warning">⚠️ 창을 닫으면 추출이 중단됩니다!</p>
     </div>
 
     <!-- Message -->
@@ -77,6 +78,15 @@
           value="http://localhost:4000"
           placeholder="http://localhost:4000"
         >
+      </div>
+      <div class="setting-item">
+        <label class="setting-label">
+          <input type="checkbox" id="botAvoidance" checked>
+          🤖 봇 회피 모드 (느리지만 안전)
+        </label>
+        <p class="setting-description">
+          체크 해제 시 빠르게 추출하지만 차단 위험 증가
+        </p>
       </div>
       <button id="saveSettingsBtn" class="btn btn-small">
         <span class="btn-icon">⚙️</span>

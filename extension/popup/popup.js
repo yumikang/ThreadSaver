@@ -19,6 +19,7 @@ const elements = {
   messageSection: document.getElementById('messageSection'),
   messageText: document.getElementById('messageText'),
   serverUrl: document.getElementById('serverUrl'),
+  botAvoidance: document.getElementById('botAvoidance'),
   saveSettingsBtn: document.getElementById('saveSettingsBtn')
 };
 
@@ -49,10 +50,12 @@ function setupEventListeners() {
 // 설정 로드
 async function loadSettings() {
   try {
-    const result = await chrome.storage.sync.get(['serverUrl']);
+    const result = await chrome.storage.sync.get(['serverUrl', 'botAvoidance']);
     if (result.serverUrl) {
       elements.serverUrl.value = result.serverUrl;
     }
+    // 봇 회피 모드는 기본값 true
+    elements.botAvoidance.checked = result.botAvoidance !== undefined ? result.botAvoidance : true;
   } catch (error) {
     console.error('Failed to load settings:', error);
   }
@@ -102,6 +105,7 @@ async function clearSessionData() {
 // 설정 저장
 async function handleSaveSettings() {
   const serverUrl = elements.serverUrl.value.trim();
+  const botAvoidance = elements.botAvoidance.checked;
 
   if (!serverUrl) {
     showMessage('서버 URL을 입력해주세요', 'error');
@@ -109,7 +113,7 @@ async function handleSaveSettings() {
   }
 
   try {
-    await chrome.storage.sync.set({ serverUrl });
+    await chrome.storage.sync.set({ serverUrl, botAvoidance });
     showMessage('설정이 저장되었습니다', 'success');
   } catch (error) {
     showMessage('설정 저장에 실패했습니다', 'error');
@@ -161,13 +165,19 @@ async function handleInitialExtract() {
     return;
   }
 
-  showProgress('타래 데이터 추출 중... (1-3분 소요될 수 있습니다)');
+  // 봇 회피 설정 로드
+  const settings = await chrome.storage.sync.get(['botAvoidance']);
+  const botAvoidance = settings.botAvoidance !== undefined ? settings.botAvoidance : true;
+
+  const timeEstimate = botAvoidance ? '3-5분' : '1-2분';
+  showProgress(`타래 데이터 추출 중... (${timeEstimate} 소요될 수 있습니다)`);
   elements.extractBtn.disabled = true;
 
   try {
     // 콘텐츠 스크립트에 메시지 전송
     const response = await chrome.tabs.sendMessage(currentTab.id, {
-      action: 'EXTRACT_THREAD'
+      action: 'EXTRACT_THREAD',
+      botAvoidance: botAvoidance
     });
 
     console.log('Extract response:', response);
@@ -203,12 +213,17 @@ async function handleContinueExtract() {
     return;
   }
 
+  // 봇 회피 설정 로드
+  const settings = await chrome.storage.sync.get(['botAvoidance']);
+  const botAvoidance = settings.botAvoidance !== undefined ? settings.botAvoidance : true;
+
   showProgress('추가 트윗 추출 중...');
   elements.continueBtn.disabled = true;
 
   try {
     const response = await chrome.tabs.sendMessage(currentTab.id, {
-      action: 'EXTRACT_THREAD'
+      action: 'EXTRACT_THREAD',
+      botAvoidance: botAvoidance
     });
 
     console.log('Continue extract response:', response);

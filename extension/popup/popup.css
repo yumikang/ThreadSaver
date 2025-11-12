@@ -169,6 +169,14 @@ body {
   text-align: center;
 }
 
+.progress-warning {
+  font-size: 11px;
+  color: #fbbf24;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 600;
+}
+
 /* Message */
 .message-section {
   padding: 12px;
@@ -230,6 +238,18 @@ body {
   outline: none;
   border-color: #3b82f6;
   background: rgba(255, 255, 255, 0.15);
+}
+
+.setting-description {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.setting-label input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
 }
 
 /* Footer */
