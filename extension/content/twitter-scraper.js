@@ -27,6 +27,46 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// "Show replies" 또는 "더 보기" 버튼 클릭
+function clickShowMoreButtons() {
+  let clickedCount = 0;
+
+  // 다양한 "더 보기" 버튼 선택자
+  const selectors = [
+    '[data-testid="tweet"] [role="button"]', // 일반 버튼
+    'div[dir="ltr"] > span:contains("Show")', // Show replies
+    'div[role="button"]:contains("더 보기")', // 한글
+    'div[role="button"]:contains("Show more")', // 영어
+    'div[role="button"]:contains("답글")', // 답글 보기
+  ];
+
+  // 모든 버튼 찾기
+  const buttons = document.querySelectorAll('div[role="button"], span[role="button"]');
+
+  buttons.forEach(button => {
+    const text = button.textContent?.toLowerCase() || '';
+    // "show", "replies", "더 보기", "답글" 등의 키워드 포함 시 클릭
+    if (text.includes('show') ||
+        text.includes('replies') ||
+        text.includes('더 보기') ||
+        text.includes('더보기') ||
+        text.includes('답글')) {
+      try {
+        button.click();
+        clickedCount++;
+      } catch (e) {
+        // 클릭 실패는 무시
+      }
+    }
+  });
+
+  if (clickedCount > 0) {
+    console.log(`ThreadSaver: Clicked ${clickedCount} "Show more" buttons`);
+  }
+
+  return clickedCount;
+}
+
 // 스크롤하여 모든 트윗 로드
 async function loadAllTweets() {
   const maxScrolls = 150; // 최대 스크롤 횟수 더 증가
@@ -43,10 +83,18 @@ async function loadAllTweets() {
 
     console.log(`ThreadSaver: Scroll ${scrollCount + 1}, tweets: ${currentTweetCount}, stable: ${stableCount}`);
 
+    // "더 보기" 버튼 클릭 시도
+    const buttonsClicked = clickShowMoreButtons();
+    if (buttonsClicked > 0) {
+      // 버튼 클릭 후 추가 대기
+      await wait(1000);
+      stableCount = 0; // 버튼 클릭했으면 카운터 리셋
+    }
+
     // 트윗 개수가 변하지 않으면 카운트 증가
     if (currentTweetCount === previousTweetCount) {
       stableCount++;
-      // 5번 연속 변화 없으면 종료 (더 여유있게)
+      // 5번 연속 변화 없으면 종료
       if (stableCount >= 5) {
         console.log('ThreadSaver: No new tweets loaded after 5 attempts, stopping');
         break;
@@ -69,6 +117,10 @@ async function loadAllTweets() {
   }
 
   console.log(`ThreadSaver: Scroll complete. Waiting for final loading...`);
+
+  // 마지막으로 버튼 클릭 한 번 더 시도
+  clickShowMoreButtons();
+  await wait(1000);
 
   // 마지막으로 충분히 대기 (로딩 완료 확인)
   await wait(2000);
