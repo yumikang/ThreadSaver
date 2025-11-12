@@ -31,37 +31,40 @@ function wait(ms) {
 function clickShowMoreButtons() {
   let clickedCount = 0;
 
-  // 다양한 "더 보기" 버튼 선택자
-  const selectors = [
-    '[data-testid="tweet"] [role="button"]', // 일반 버튼
-    'div[dir="ltr"] > span:contains("Show")', // Show replies
-    'div[role="button"]:contains("더 보기")', // 한글
-    'div[role="button"]:contains("Show more")', // 영어
-    'div[role="button"]:contains("답글")', // 답글 보기
-  ];
+  try {
+    // 모든 버튼 찾기
+    const buttons = document.querySelectorAll('div[role="button"], span[role="button"]');
 
-  // 모든 버튼 찾기
-  const buttons = document.querySelectorAll('div[role="button"], span[role="button"]');
-
-  buttons.forEach(button => {
-    const text = button.textContent?.toLowerCase() || '';
-    // "show", "replies", "더 보기", "답글" 등의 키워드 포함 시 클릭
-    if (text.includes('show') ||
-        text.includes('replies') ||
-        text.includes('더 보기') ||
-        text.includes('더보기') ||
-        text.includes('답글')) {
+    buttons.forEach(button => {
       try {
-        button.click();
-        clickedCount++;
-      } catch (e) {
-        // 클릭 실패는 무시
-      }
-    }
-  });
+        const text = button.textContent?.toLowerCase() || '';
 
-  if (clickedCount > 0) {
-    console.log(`ThreadSaver: Clicked ${clickedCount} "Show more" buttons`);
+        // "show", "replies", "더 보기", "답글" 등의 키워드 포함 시 클릭
+        // 하지만 메인 액션 버튼은 제외 (retweet, like 등)
+        if ((text.includes('show') ||
+             text.includes('replies') ||
+             text.includes('더 보기') ||
+             text.includes('더보기') ||
+             text.includes('답글')) &&
+            !text.includes('retweet') &&
+            !text.includes('like') &&
+            !text.includes('share') &&
+            !text.includes('bookmark')) {
+
+          button.click();
+          clickedCount++;
+        }
+      } catch (e) {
+        // 개별 버튼 클릭 실패는 무시
+        console.log('ThreadSaver: Button click failed (safe to ignore):', e.message);
+      }
+    });
+
+    if (clickedCount > 0) {
+      console.log(`ThreadSaver: Clicked ${clickedCount} "Show more" buttons`);
+    }
+  } catch (e) {
+    console.error('ThreadSaver: Error in clickShowMoreButtons:', e);
   }
 
   return clickedCount;
