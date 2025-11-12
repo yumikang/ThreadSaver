@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatNumber } from '@/lib/utils'
 import { Header, Footer } from '@/components/Header'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Copy, Check } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +48,7 @@ export default function SeriesReaderPage() {
   const [pagination, setPagination] = useState<PaginationData | null>(null)
   const [progress, setProgress] = useState(0)
   const [deleting, setDeleting] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     fetchSeries()
@@ -125,6 +126,57 @@ export default function SeriesReaderPage() {
     }
   }
 
+  async function handleCopyAll() {
+    if (!series || tweets.length === 0) return
+
+    try {
+      // 전체 텍스트 생성
+      let content = `${series.title}\n`
+      content += `by @${series.authorUsername}\n`
+      content += `\n`
+
+      if (series.description) {
+        content += `${series.description}\n\n`
+      }
+
+      content += `${'='.repeat(50)}\n\n`
+
+      let currentThread = -1
+      tweets.forEach((tweet) => {
+        // 타래가 바뀔 때만 구분선 추가 (라벨 없이)
+        if (currentThread !== tweet.threadSequence) {
+          if (currentThread !== -1) {
+            content += `\n${'='.repeat(50)}\n\n`
+          }
+          currentThread = tweet.threadSequence
+        }
+
+        // 트윗 내용
+        content += `${tweet.content}\n`
+
+        // 이미지 URL (라벨 없이 바로 URL만)
+        if (tweet.mediaUrls && tweet.mediaUrls.length > 0) {
+          content += `\n`
+          tweet.mediaUrls.forEach((url: string) => {
+            content += `${url}\n`
+          })
+        }
+
+        content += `\n`
+      })
+
+      // 클립보드에 복사
+      await navigator.clipboard.writeText(content)
+
+      // 복사 완료 표시
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (error) {
+      console.error('Error copying to clipboard:', error)
+      alert('복사에 실패했습니다.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="dark-theme min-h-screen flex flex-col">
@@ -183,6 +235,24 @@ export default function SeriesReaderPage() {
               <Badge variant={series.status === 'completed' ? 'default' : 'secondary'}>
                 {series.status === 'completed' ? '완결' : '연재중'}
               </Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyAll}
+                disabled={copied}
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-1" />
+                    복사됨
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-1" />
+                    전체 복사
+                  </>
+                )}
+              </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" disabled={deleting}>
