@@ -21,21 +21,35 @@
         <span class="status-value" id="pageStatus">확인 중...</span>
       </div>
       <div class="status-item">
-        <span class="status-label">감지된 트윗:</span>
+        <span class="status-label">추출된 트윗:</span>
         <span class="status-value" id="tweetCount">-</span>
       </div>
+    </div>
+
+    <!-- Last Tweet Preview -->
+    <div id="lastTweetSection" class="last-tweet-section" style="display: none;">
+      <div class="last-tweet-label">마지막 추출된 트윗:</div>
+      <div id="lastTweetPreview" class="last-tweet-preview"></div>
+      <a id="lastTweetLink" class="last-tweet-link" href="#" target="_blank">
+        🔗 마지막 트윗으로 이동
+      </a>
     </div>
 
     <!-- Action Buttons -->
     <div class="actions">
       <button id="extractBtn" class="btn btn-primary" disabled>
         <span class="btn-icon">📥</span>
-        <span class="btn-text">타래 추출하기</span>
+        <span class="btn-text">타래 추출 시작</span>
       </button>
 
-      <button id="saveBtn" class="btn btn-secondary" disabled>
-        <span class="btn-icon">💾</span>
-        <span class="btn-text">서버에 저장하기</span>
+      <button id="continueBtn" class="btn btn-primary" style="display: none;">
+        <span class="btn-icon">➕</span>
+        <span class="btn-text">계속 추출하기</span>
+      </button>
+
+      <button id="completeBtn" class="btn btn-success" style="display: none;">
+        <span class="btn-icon">✅</span>
+        <span class="btn-text">추출 완료 및 저장</span>
       </button>
     </div>
 

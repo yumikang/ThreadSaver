@@ -78,26 +78,39 @@ npm run dev
 
 ## 📖 사용 방법
 
-### 기본 사용법
+### 기본 사용법 (증분 추출)
 
 1. **트위터 타래 페이지로 이동**
    ```
-   예: https://twitter.com/username/status/1234567890
+   예: https://x.com/username/status/1234567890
    ```
 
 2. **익스텐션 아이콘 클릭**
    - 툴바의 🧵 ThreadSaver 아이콘 클릭
-   - 또는 익스텐션 메뉴에서 선택
 
-3. **타래 추출하기**
-   - "📥 타래 추출하기" 버튼 클릭
-   - 페이지가 자동으로 스크롤되며 모든 트윗 로드
-   - 추출된 트윗 개수 확인
+3. **타래 추출 시작**
+   - "📥 타래 추출 시작" 버튼 클릭
+   - 페이지가 자동으로 스크롤되며 트윗 로드 (1-3분 소요)
+   - 추출된 트윗 개수 및 마지막 트윗 미리보기 확인
 
-4. **서버에 저장하기**
-   - "💾 서버에 저장하기" 버튼 클릭
-   - 성공 메시지 확인
-   - 웹 앱에서 저장된 타래 확인
+4. **더 추출하기 (선택사항)**
+   - 마지막 트윗을 보고 타래가 더 있다면:
+     1. 다음 타래 트윗으로 **수동 이동**
+     2. "➕ 계속 추출하기" 버튼 클릭
+     3. 새로운 트윗들이 기존 데이터에 추가됨
+     4. 필요시 반복
+
+5. **추출 완료 및 저장**
+   - 모든 타래를 추출했다면 "✅ 추출 완료 및 저장" 버튼 클릭
+   - 서버에 전체 타래 저장
+   - 웹 앱에서 확인
+
+### 증분 추출의 장점
+
+- 자동 스크롤이 놓친 트윗을 수동으로 추가 가능
+- 긴 타래를 여러 번에 나눠서 추출 가능
+- 세션이 유지되어 페이지 이동 후에도 이어서 추출 가능
+- 중복 제거 자동 처리
 
 ### 설정 변경
 
@@ -139,6 +152,38 @@ npm run dev
 **해결**:
 - 트위터 타래의 첫 번째 트윗 URL로 이동
 - URL 형식: `https://twitter.com/username/status/1234567890`
+
+### "Could not establish connection" 오류
+
+**증상**: "Extraction failed: Error: Could not establish connection. Receiving end does not exist"
+
+**원인**: 콘텐츠 스크립트가 트위터 페이지에 로드되지 않음
+
+**해결**:
+1. **익스텐션 새로고침**:
+   ```
+   chrome://extensions/ → ThreadSaver → 🔄 새로고침
+   ```
+
+2. **트위터 페이지 완전 새로고침**:
+   - F5 또는 Cmd+Shift+R (맥) / Ctrl+Shift+R (윈도우)
+   - **중요**: 익스텐션만 새로고침하면 안 되고 페이지도 새로고침!
+
+3. **콘솔에서 로드 확인**:
+   - 트위터 페이지에서 F12 (개발자 도구)
+   - Console 탭에서 다음 메시지 확인:
+   ```
+   🧵 ThreadSaver: Content script INITIALIZING...
+   🧵 ThreadSaver: Content script loaded and listeners registered
+   🧵 ThreadSaver: ✅ Content script fully ready and waiting for messages!
+   ```
+
+4. **위 로그가 안 보이면**:
+   - `chrome://extensions/`에서 "오류" 버튼 확인
+   - 익스텐션 권한 확인 (twitter.com, x.com 접근 허용)
+   - 필요시 익스텐션 제거 후 재설치
+
+**자세한 디버깅 가이드**: `extension/DEBUG.md` 파일 참고
 
 ### 추출은 되는데 저장이 안됨
 
