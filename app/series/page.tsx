@@ -11,7 +11,8 @@ function getCategory(tweetCount: number) {
   if (tweetCount <= 5) return '잡썰'
   if (tweetCount <= 10) return '짧썰'
   if (tweetCount <= 20) return '단편'
-  return '중장편'
+  if (tweetCount <= 50) return '중편'
+  return '장편'
 }
 
 // 카테고리별로 시리즈 그룹화
@@ -20,7 +21,8 @@ function groupSeriesByCategory(seriesList: SeriesData[]) {
     '잡썰': [] as SeriesData[],
     '짧썰': [] as SeriesData[],
     '단편': [] as SeriesData[],
-    '중장편': [] as SeriesData[],
+    '중편': [] as SeriesData[],
+    '장편': [] as SeriesData[],
   }
 
   seriesList.forEach((series) => {
@@ -35,7 +37,8 @@ const categories = [
   { name: '잡썰', slug: 'jabsseol', description: '5트윗 이하의 짧은 이야기', color: 'bg-gray-500', emoji: '💬' },
   { name: '짧썰', slug: 'jjalbsseol', description: '6~10트윗의 가벼운 이야기', color: 'bg-blue-500', emoji: '📝' },
   { name: '단편', slug: 'danpyeon', description: '11~20트윗의 완성도 있는 이야기', color: 'bg-green-500', emoji: '📖' },
-  { name: '중장편', slug: 'jungpyeon', description: '20트윗 이상의 긴 이야기', color: 'bg-purple-500', emoji: '📚' },
+  { name: '중편', slug: 'jungpyeon', description: '21~50트윗의 긴 이야기', color: 'bg-purple-500', emoji: '📚' },
+  { name: '장편', slug: 'jangpyeon', description: '51트윗 이상의 대작', color: 'bg-red-500', emoji: '📕' },
 ]
 
 export default function SeriesListPage() {

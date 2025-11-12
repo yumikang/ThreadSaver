@@ -16,14 +16,16 @@ function getCategory(tweetCount: number) {
   if (tweetCount <= 5) return '잡썰'
   if (tweetCount <= 10) return '짧썰'
   if (tweetCount <= 20) return '단편'
-  return '중장편'
+  if (tweetCount <= 50) return '중편'
+  return '장편'
 }
 
 const categoryMap = {
   'jabsseol': { name: '잡썰', color: 'bg-gray-500', emoji: '💬', description: '5트윗 이하의 짧은 이야기' },
   'jjalbsseol': { name: '짧썰', color: 'bg-blue-500', emoji: '📝', description: '6~10트윗의 가벼운 이야기' },
   'danpyeon': { name: '단편', color: 'bg-green-500', emoji: '📖', description: '11~20트윗의 완성도 있는 이야기' },
-  'jungpyeon': { name: '중장편', color: 'bg-purple-500', emoji: '📚', description: '20트윗 이상의 긴 이야기' },
+  'jungpyeon': { name: '중편', color: 'bg-purple-500', emoji: '📚', description: '21~50트윗의 긴 이야기' },
+  'jangpyeon': { name: '장편', color: 'bg-red-500', emoji: '📕', description: '51트윗 이상의 대작' },
 }
 
 export default function CategoryPage() {
