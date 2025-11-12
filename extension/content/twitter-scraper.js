@@ -37,6 +37,234 @@ function wait(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// ====================================
+// 🤖 봇 회피 함수들 (Anti-Bot Detection)
+// ====================================
+
+/**
+ * Bezier 곡선 기반 인간적인 딜레이 생성
+ * 대부분 0.8-5초, 12% 확률로 긴 휴식 (30-90초)
+ */
+function getHumanDelay() {
+  const random = Math.random();
+
+  // 12% 확률로 긴 휴식 (사람이 잠시 멈춰서 읽거나 생각하는 것처럼)
+  if (random < 0.12) {
+    const longPause = 30000 + Math.random() * 60000; // 30-90초
+    console.log(`💤 긴 휴식: ${(longPause / 1000).toFixed(1)}초`);
+    return longPause;
+  }
+
+  // Bezier 곡선으로 자연스러운 분포 생성
+  const t = Math.random();
+  const bezier = t * t * (3 - 2 * t); // Smoothstep (ease-in-out)
+
+  // 클러스터 패턴: 빠른 브라우징(60%), 보통(25%), 느린 읽기(15%)
+  const pattern = Math.random();
+
+  if (pattern < 0.6) {
+    // 빠른 브라우징 (60%)
+    return 800 + bezier * 1200; // 0.8-2초
+  } else if (pattern < 0.85) {
+    // 보통 브라우징 (25%)
+    return 2000 + bezier * 2500; // 2-4.5초
+  } else {
+    // 천천히 읽기 (15%)
+    return 4500 + bezier * 3500; // 4.5-8초
+  }
+}
+
+/**
+ * 가변 스크롤 거리 생성 (뷰포트의 20-110%)
+ */
+function getRandomScrollDistance() {
+  const viewportHeight = window.innerHeight;
+  const pattern = Math.random();
+
+  if (pattern < 0.3) {
+    // 작은 스크롤 (30%)
+    const factor = 0.2 + Math.random() * 0.3; // 20-50%
+    return viewportHeight * factor;
+  } else if (pattern < 0.7) {
+    // 중간 스크롤 (40%)
+    const factor = 0.5 + Math.random() * 0.4; // 50-90%
+    return viewportHeight * factor;
+  } else {
+    // 큰 스크롤 (30%)
+    const factor = 0.9 + Math.random() * 0.2; // 90-110%
+    return viewportHeight * factor;
+  }
+}
+
+/**
+ * 위로 스크롤 여부 결정 (15% 확률)
+ * 사람은 가끔 위로 올라가서 다시 확인함
+ */
+function shouldScrollUp() {
+  return Math.random() < 0.15;
+}
+
+/**
+ * 위로 스크롤할 때의 거리 (작은 거리)
+ */
+function getScrollUpDistance() {
+  return -(100 + Math.random() * 300); // -100px ~ -400px
+}
+
+/**
+ * 마우스 움직임 시뮬레이션 (30% 확률로 실행)
+ */
+function simulateMouseMove() {
+  if (Math.random() > 0.3) return; // 30% 확률
+
+  const x = Math.random() * window.innerWidth;
+  const y = Math.random() * window.innerHeight;
+
+  const event = new MouseEvent('mousemove', {
+    view: window,
+    bubbles: true,
+    cancelable: true,
+    clientX: x,
+    clientY: y
+  });
+
+  document.dispatchEvent(event);
+}
+
+/**
+ * Smooth 스크롤 실행 (Bezier easing 포함)
+ */
+function smoothScrollBy(distance, duration = 500) {
+  const start = window.pageYOffset;
+  const startTime = performance.now();
+
+  function easeInOutCubic(t) {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  function scroll(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = easeInOutCubic(progress);
+
+    window.scrollTo(0, start + distance * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(scroll);
+    }
+  }
+
+  requestAnimationFrame(scroll);
+}
+
+/**
+ * Rate Limit 감지 및 관리 클래스
+ */
+class RateLimitManager {
+  constructor() {
+    this.backoffLevel = 0;
+    this.maxBackoffLevel = 5;
+    this.isRateLimited = false;
+    this.lastContentLoadTime = Date.now();
+    this.noNewContentCount = 0;
+  }
+
+  /**
+   * Rate limit 신호 감지 (DOM에서)
+   */
+  detectRateLimit() {
+    const rateLimitIndicators = [
+      'rate limit',
+      'too many requests',
+      'try again later',
+      'temporarily unavailable',
+      '일시적으로 사용할 수 없',
+      '너무 많은 요청'
+    ];
+
+    const bodyText = document.body.innerText.toLowerCase();
+    const detected = rateLimitIndicators.some(indicator =>
+      bodyText.includes(indicator.toLowerCase())
+    );
+
+    if (detected) {
+      console.warn('⚠️ Rate limit 신호 감지!');
+      this.triggerBackoff();
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * 콘텐츠 로딩 실패 감지
+   */
+  checkContentLoading(currentTweetCount, previousTweetCount) {
+    if (currentTweetCount === previousTweetCount) {
+      this.noNewContentCount++;
+
+      // 10번 연속 새 콘텐츠 없으면 의심
+      if (this.noNewContentCount >= 10) {
+        console.warn('⚠️ 콘텐츠 로딩 실패 의심 (10회 연속)');
+        this.triggerBackoff();
+      }
+    } else {
+      this.noNewContentCount = 0;
+      this.lastContentLoadTime = Date.now();
+    }
+  }
+
+  /**
+   * Backoff 트리거
+   */
+  triggerBackoff() {
+    this.isRateLimited = true;
+    this.backoffLevel = Math.min(this.backoffLevel + 1, this.maxBackoffLevel);
+
+    const delay = this.getBackoffDelay();
+    console.log(`🚨 Rate limit! Backoff level: ${this.backoffLevel}, 대기: ${delay / 1000}초`);
+  }
+
+  /**
+   * 지수 백오프 딜레이 계산
+   * Level 0: 30초, 1: 1분, 2: 2분, 3: 4분, 4: 8분, 5: 15분
+   */
+  getBackoffDelay() {
+    const delays = [30000, 60000, 120000, 240000, 480000, 900000];
+    return delays[this.backoffLevel] || 900000;
+  }
+
+  /**
+   * Backoff 실행
+   */
+  async handleBackoff() {
+    if (!this.isRateLimited) return;
+
+    const delay = this.getBackoffDelay();
+    console.log(`⏰ ${delay / 1000}초 대기 중...`);
+
+    await wait(delay);
+
+    // 성공 시 backoff 레벨 감소
+    this.backoffLevel = Math.max(0, this.backoffLevel - 1);
+    this.isRateLimited = false;
+    this.noNewContentCount = 0;
+
+    console.log('✅ Backoff 완료, 재개합니다');
+  }
+
+  /**
+   * 리셋
+   */
+  reset() {
+    this.backoffLevel = 0;
+    this.isRateLimited = false;
+    this.noNewContentCount = 0;
+  }
+}
+
 // "Show replies" 또는 "더 보기" 버튼 클릭
 function clickShowMoreButtons() {
   let clickedCount = 0;
@@ -334,14 +562,24 @@ async function extractThreadData() {
   // 누적 트윗 저장
   const allTweets = new Map(); // ID를 키로 사용하여 중복 방지
 
-  console.log('🧵 ThreadSaver: Starting incremental extraction with scroll...');
+  // 🤖 봇 회피: Rate Limit Manager 초기화
+  const rateLimiter = new RateLimitManager();
 
-  const maxScrolls = 100;
+  console.log('🧵 ThreadSaver: Starting HUMAN-LIKE extraction with anti-bot measures...');
+  console.log('🤖 봇 회피 모드: 활성화 (랜덤 타이밍, 가변 스크롤, 마우스 시뮬레이션)');
+
+  const maxScrolls = 200; // 매우 긴 타래 지원
   let scrollCount = 0;
   let noChangeCount = 0;
   let previousTweetCount = 0;
 
   while (scrollCount < maxScrolls) {
+    // 🤖 Rate limit 체크
+    if (rateLimiter.detectRateLimit()) {
+      await rateLimiter.handleBackoff();
+      continue;
+    }
+
     // 현재 보이는 트윗들 추출
     const currentElements = document.querySelectorAll('article[data-testid="tweet"]');
     console.log(`📊 Scroll #${scrollCount + 1}: ${currentElements.length} visible tweets`);
@@ -364,19 +602,23 @@ async function extractThreadData() {
     const buttonsClicked = clickShowMoreButtons();
     if (buttonsClicked > 0) {
       console.log(`🔘 Clicked ${buttonsClicked} buttons`);
-      await wait(2000);
+      const buttonDelay = getHumanDelay(); // 🤖 랜덤 딜레이
+      console.log(`⏳ 버튼 클릭 후 대기: ${(buttonDelay / 1000).toFixed(1)}초`);
+      await wait(buttonDelay);
       noChangeCount = 0;
       continue;
     }
 
-    // 변화 확인
+    // 변화 확인 및 rate limit 체크
     if (currentTotalCount > previousTweetCount) {
       console.log(`✨ Progress: +${currentTotalCount - previousTweetCount} new tweets`);
       previousTweetCount = currentTotalCount;
       noChangeCount = 0;
+      rateLimiter.noNewContentCount = 0; // 🤖 리셋
     } else {
       noChangeCount++;
       console.log(`⏳ No new tweets (${noChangeCount}/8)`);
+      rateLimiter.checkContentLoading(currentTotalCount, previousTweetCount); // 🤖 체크
     }
 
     // 종료 조건
@@ -385,13 +627,29 @@ async function extractThreadData() {
       break;
     }
 
-    // 스크롤
-    window.scrollTo(0, document.documentElement.scrollHeight);
-    await wait(500);
-    window.scrollBy(0, 1000);
-    await wait(500);
-    document.documentElement.scrollTop = document.documentElement.scrollHeight;
-    await wait(2000);
+    // 🤖 봇 회피 스크롤 (핵심!)
+    const scrollDirection = shouldScrollUp();
+
+    if (scrollDirection) {
+      // 15% 확률로 위로 스크롤 (자연스럽게)
+      const upDistance = getScrollUpDistance();
+      smoothScrollBy(upDistance, 400);
+      console.log(`⬆️ 위로 스크롤: ${Math.abs(upDistance)}px (재확인 시뮬레이션)`);
+    } else {
+      // 아래로 스크롤 (가변 거리)
+      const scrollDistance = getRandomScrollDistance();
+      const scrollDuration = 300 + Math.random() * 500; // 300-800ms
+      smoothScrollBy(scrollDistance, scrollDuration);
+      console.log(`⬇️ 아래로 스크롤: ${Math.round(scrollDistance)}px (${Math.round(scrollDuration)}ms)`);
+    }
+
+    // 🤖 마우스 움직임 시뮬레이션 (30% 확률)
+    simulateMouseMove();
+
+    // 🤖 인간적인 랜덤 딜레이
+    const humanDelay = getHumanDelay();
+    console.log(`⏰ 대기 시간: ${(humanDelay / 1000).toFixed(1)}초`);
+    await wait(humanDelay);
 
     scrollCount++;
   }
