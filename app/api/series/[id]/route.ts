@@ -151,7 +151,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/series/[id]
- * Delete a series
+ * Delete a series and all related data
  */
 export async function DELETE(
   request: NextRequest,
@@ -162,17 +162,53 @@ export async function DELETE(
 
     const series = await prisma.series.findUnique({
       where: { id },
+      include: {
+        seriesThreads: {
+          include: {
+            thread: true,
+          },
+        },
+      },
     })
 
     if (!series) {
       return errorResponse('Series not found', 404)
     }
 
+    // Get all thread IDs associated with this series
+    const threadIds = series.seriesThreads.map(st => st.thread.id)
+
+    // Delete in correct order to respect foreign key constraints
+    // 1. Delete tweets (foreign key to threads)
+    if (threadIds.length > 0) {
+      await prisma.tweet.deleteMany({
+        where: {
+          threadId: { in: threadIds },
+        },
+      })
+    }
+
+    // 2. Delete series-related data (foreign key to series)
+    await prisma.$transaction([
+      prisma.seriesThread.deleteMany({ where: { seriesId: id } }),
+      prisma.bookmark.deleteMany({ where: { seriesId: id } }),
+      prisma.seriesView.deleteMany({ where: { seriesId: id } }),
+      prisma.readingProgress.deleteMany({ where: { seriesId: id } }),
+    ])
+
+    // 3. Delete threads
+    if (threadIds.length > 0) {
+      await prisma.thread.deleteMany({
+        where: { id: { in: threadIds } },
+      })
+    }
+
+    // 4. Finally delete the series
     await prisma.series.delete({
       where: { id },
     })
 
-    return successResponse({ id }, 'Series deleted successfully')
+    return successResponse({ id }, 'Series and related data deleted successfully')
   } catch (error) {
     return handleApiError(error)
   }
