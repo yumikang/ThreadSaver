@@ -6,12 +6,28 @@
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL (VPS: 141.164.60.51:5432)
-- Python FastAPI scraper (VPS: api.one-q.xyz)
+### 🎯 가장 쉬운 방법 (권장)
 
-### Installation
+프로젝트 폴더에서 **`ThreadSaver 서버 시작.command`** 파일을 더블클릭하세요!
+- ✅ 자동으로 서버 시작 (포트 4000)
+- ✅ 브라우저 자동 열림 (http://localhost:4000)
+- ✅ 창을 닫으면 서버 종료
+
+### 📋 수동 실행 방법
+
+#### 방법 1: 실행 스크립트 사용
+```bash
+./start.sh
+```
+
+#### 방법 2: 직접 명령어 입력
+```bash
+PORT=4000 npm run dev
+```
+
+그 다음 브라우저에서 [http://localhost:4000](http://localhost:4000)으로 접속하세요.
+
+### 📦 초기 설치 (처음 한 번만)
 
 ```bash
 # Install dependencies
@@ -24,12 +40,7 @@ cp .env.example .env.local
 # Run Prisma migrations
 npx prisma migrate dev
 npx prisma generate
-
-# Start development server
-npm run dev
 ```
-
-Visit [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
 
