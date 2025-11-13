@@ -17,10 +17,10 @@ export function Header() {
             시리즈
           </Link>
           <Link
-            href="/dashboard"
+            href="/extension"
             className="text-sm font-medium text-white/70 hover:text-white transition-colors"
           >
-            대시보드
+            Extension
           </Link>
           <Link
             href="/dashboard/import"
@@ -42,7 +42,7 @@ export function Footer() {
           <p>© 2025 StoryArchive. All rights reserved.</p>
           <div className="footer-links">
             <Link href="/series">시리즈</Link>
-            <Link href="/dashboard">대시보드</Link>
+            <Link href="/extension">Extension</Link>
             <Link href="/dashboard/import">Archive 가져오기</Link>
           </div>
         </div>

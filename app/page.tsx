@@ -2,39 +2,14 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Header, Footer } from '@/components/Header'
 
 export default function Home() {
-  const [threadUrl, setThreadUrl] = useState('')
-  const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleQuickStart = async () => {
-    if (!threadUrl.trim()) {
-      alert('트위터 타래 링크를 입력해주세요!')
-      return
-    }
-
-    // Twitter URL 검증
-    const twitterUrlPattern = /^https?:\/\/(twitter\.com|x\.com)\/\w+\/status\/\d+/
-    if (!twitterUrlPattern.test(threadUrl)) {
-      alert('올바른 트위터 타래 링크를 입력해주세요.\n예: https://twitter.com/username/status/123456789')
-      return
-    }
-
-    setLoading(true)
-
-    try {
-      // Extension API 호출 (실제로는 브라우저 확장에서 처리)
-      // 여기서는 일단 스크래핑 페이지로 리다이렉트
-      router.push(`/dashboard?url=${encodeURIComponent(threadUrl)}`)
-    } catch (error) {
-      console.error('Failed to process thread:', error)
-      alert('타래 처리 중 오류가 발생했습니다.')
-      setLoading(false)
-    }
+  const handleArchiveImport = () => {
+    router.push('/dashboard/import')
   }
 
   return (
@@ -60,28 +35,19 @@ export default function Home() {
               웹소설처럼 편하게 읽어보세요 ✨
             </p>
 
-            {/* Quick Start Input Form */}
+            {/* Quick Start - Archive Import */}
             <div className="quick-start-form">
               <div className="input-group">
-                <label htmlFor="threadUrl" className="input-label">
-                  타래 링크 (Thread URL)
-                </label>
-                <input
-                  type="text"
-                  id="threadUrl"
-                  className="thread-input"
-                  placeholder="https://twitter.com/username/status/123456789"
-                  value={threadUrl}
-                  onChange={(e) => setThreadUrl(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleQuickStart()}
-                />
+                <p className="input-label" style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+                  트위터 아카이브 파일을 가져와서<br/>
+                  나만의 시리즈를 만들어보세요
+                </p>
               </div>
               <button
                 className="btn-quick-start"
-                onClick={handleQuickStart}
-                disabled={loading}
+                onClick={handleArchiveImport}
               >
-                {loading ? '처리 중...' : '바로 시작하기 ✨'}
+                아카이브 가져오기 📦
               </button>
             </div>
 
@@ -95,17 +61,8 @@ export default function Home() {
               <Button size="lg" variant="outline" className="btn-cta-secondary" asChild>
                 <Link href="/series">시리즈 둘러보기</Link>
               </Button>
-              <Button size="lg" variant="outline" className="btn-cta-secondary" asChild>
-                <Link href="/dashboard/import">Archive 가져오기</Link>
-              </Button>
             </div>
 
-            {/* Trust Indicators */}
-            <div className="trust-badges">
-              <span className="badge-item">✓ 완전 무료</span>
-              <span className="badge-item">✓ 로그인 불필요</span>
-              <span className="badge-item">✓ 영구 보관</span>
-            </div>
           </div>
         </div>
       </section>

@@ -159,7 +159,7 @@ export default function ImportPage() {
                   <li>생성된 시리즈: <strong>{result.seriesCreated}</strong>개</li>
                 </ul>
                 <Button asChild className="mt-4">
-                  <Link href="/dashboard">대시보드로 이동</Link>
+                  <Link href="/series">시리즈 보기</Link>
                 </Button>
               </div>
             </div>
