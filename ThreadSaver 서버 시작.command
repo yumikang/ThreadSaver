@@ -13,9 +13,13 @@ fi
 # 프로젝트 디렉토리로 이동
 cd "$(dirname "$0")"
 
+# 로컬 IP 주소 가져오기
+LOCAL_IP=$(ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}' | head -1)
+
 # 서버 시작
 echo "✅ 서버를 시작합니다 (포트 4000)"
-echo "📱 브라우저에서 http://localhost:4000 으로 접속하세요"
+echo "💻 로컬: http://localhost:4000"
+echo "📱 모바일: http://${LOCAL_IP}:4000"
 echo ""
 echo "🌐 자동으로 브라우저를 엽니다..."
 sleep 2
@@ -24,4 +28,4 @@ echo ""
 echo "🛑 서버를 종료하려면 이 창을 닫으세요"
 echo ""
 
-PORT=4000 npm run dev
+PORT=4000 HOST=0.0.0.0 npm run dev

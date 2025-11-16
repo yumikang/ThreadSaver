@@ -165,8 +165,45 @@ export default function SeriesReaderPage() {
         content += `\n`
       })
 
-      // 클립보드에 복사
-      await navigator.clipboard.writeText(content)
+      // 클립보드에 복사 (HTTP 환경 대응)
+      try {
+        // Modern API (HTTPS 필요)
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(content)
+        } else {
+          // Fallback for HTTP (모바일 포함)
+          const textArea = document.createElement('textarea')
+          textArea.value = content
+          textArea.style.position = 'fixed'
+          textArea.style.left = '-999999px'
+          textArea.style.top = '-999999px'
+          document.body.appendChild(textArea)
+          textArea.focus()
+          textArea.select()
+
+          try {
+            document.execCommand('copy')
+            textArea.remove()
+          } catch (err) {
+            textArea.remove()
+            throw err
+          }
+        }
+      } catch (clipboardError) {
+        // 최종 fallback: 다운로드
+        const blob = new Blob([content], { type: 'text/plain' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${series.slug}.txt`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+
+        alert('클립보드 복사가 지원되지 않아 텍스트 파일로 다운로드합니다.')
+        return
+      }
 
       // 복사 완료 표시
       setCopied(true)

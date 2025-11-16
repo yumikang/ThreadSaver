@@ -43,12 +43,13 @@ export default function Home() {
                   나만의 시리즈를 만들어보세요
                 </p>
               </div>
-              <button
+              <Button
+                size="lg"
                 className="btn-quick-start"
                 onClick={handleArchiveImport}
               >
                 아카이브 가져오기 📦
-              </button>
+              </Button>
             </div>
 
             {/* Alternative Options */}

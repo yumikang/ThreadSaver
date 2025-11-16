@@ -36,6 +36,14 @@ export async function POST(request: NextRequest) {
 
     console.log(`Extension scrape: ${tweets.length} tweets from ${url}`)
 
+    // 디버깅: 첫 5개 트윗의 시간 확인
+    console.log('First 5 tweets timestamps:', tweets.slice(0, 5).map((t, i) => ({
+      index: i,
+      id: t.id,
+      createdAt: t.createdAt,
+      content: t.content?.slice(0, 50)
+    })))
+
     // Extract conversation ID from URL
     const conversationIdMatch = url.match(/status\/(\d+)/)
     if (!conversationIdMatch) {
@@ -43,7 +51,21 @@ export async function POST(request: NextRequest) {
     }
 
     const conversationId = conversationIdMatch[1]
-    const firstTweet = tweets[0]
+
+    // 시간순 정렬 확인 (오래된 것이 먼저 와야 함)
+    const sortedTweets = [...tweets].sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime()
+      const timeB = new Date(b.createdAt).getTime()
+      return timeA - timeB
+    })
+
+    console.log('After sorting - First tweet:', {
+      id: sortedTweets[0].id,
+      createdAt: sortedTweets[0].createdAt,
+      content: sortedTweets[0].content?.slice(0, 50)
+    })
+
+    const firstTweet = sortedTweets[0] // 가장 오래된 트윗이 첫번째
 
     // Check if thread already exists
     const existingThread = await prisma.thread.findUnique({
@@ -71,8 +93,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create Tweets
-    const tweetsToCreate = tweets
+    // Create Tweets (정렬된 순서대로)
+    const tweetsToCreate = sortedTweets
       .filter((tweet) => tweet.id) // Filter out tweets without ID
       .map((tweet, index) => {
         return {
@@ -81,7 +103,7 @@ export async function POST(request: NextRequest) {
           content: tweet.content || '',
           createdAt: new Date(tweet.createdAt),
           authorUsername: tweet.authorUsername || 'unknown',
-          sequenceNumber: tweet.sequenceNumber || index + 1,
+          sequenceNumber: index + 1, // 정렬된 순서대로 1, 2, 3...
           replyToId: tweet.replyToId ? BigInt(tweet.replyToId) : null,
           likeCount: tweet.likeCount || 0,
           retweetCount: tweet.retweetCount || 0,
@@ -94,20 +116,20 @@ export async function POST(request: NextRequest) {
       skipDuplicates: true,
     })
 
-    console.log(`Thread ${thread.id} created with ${tweets.length} tweets`)
+    console.log(`Thread ${thread.id} created with ${sortedTweets.length} tweets`)
 
-    // Create Series from thread
+    // Create Series from thread (첫 트윗 기준)
     const slug = `${firstTweet.authorUsername}-${conversationId}`.toLowerCase()
-    const seriesTitle = tweets[0]?.content?.slice(0, 100) || `${firstTweet.authorUsername}의 타래`
+    const seriesTitle = firstTweet.content?.slice(0, 100) || `${firstTweet.authorUsername}의 타래`
 
     const series = await prisma.series.create({
       data: {
         authorUsername: firstTweet.authorUsername || 'unknown',
         title: seriesTitle,
-        description: tweets[0]?.content || '',
+        description: firstTweet.content || '',
         slug,
         status: 'completed',
-        totalTweets: tweets.length,
+        totalTweets: sortedTweets.length,
         totalThreads: 1,
         isPublic: true,
       },
@@ -129,7 +151,7 @@ export async function POST(request: NextRequest) {
         threadId: thread.id,
         seriesId: series.id,
         conversationId: thread.conversationId,
-        tweetCount: tweets.length,
+        tweetCount: sortedTweets.length,
       },
       'Thread and series saved successfully'
     )
