@@ -22,7 +22,9 @@ export default function ImportPage() {
 
     const formData = new FormData()
     formData.append('archive', file)
-    formData.append('mode', 'js')
+    // 파일 확장자에 따라 mode 자동 설정
+    const mode = file.name.endsWith('.zip') ? 'zip' : 'js'
+    formData.append('mode', mode)
 
     try {
       const res = await fetch('/api/import/twitter-archive', {
@@ -111,7 +113,7 @@ export default function ImportPage() {
 
             <input
               type="file"
-              accept=".js"
+              accept=".js,.zip"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
               className="hidden"
               id="archive-upload"

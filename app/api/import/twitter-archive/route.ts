@@ -125,12 +125,15 @@ export async function POST(request: NextRequest) {
     let tweetsData
     try {
       tweetsData = JSON.parse(jsonString)
+      console.log('Parsed tweets data, first item structure:', JSON.stringify(tweetsData[0], null, 2).slice(0, 500))
     } catch (parseError) {
       console.error('JSON parse error:', parseError)
+      console.error('First 200 chars of jsonString:', jsonString.slice(0, 200))
       return NextResponse.json(
         {
           error:
             'Failed to parse tweets.js. The file format may be invalid.',
+          details: process.env.NODE_ENV === 'development' ? String(parseError) : undefined,
         },
         { status: 400 }
       )
