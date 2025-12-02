@@ -118,8 +118,8 @@ export default function ExtensionPage() {
               <div className="ml-11">
                 <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
                   <li>Chrome 브라우저에서 <code className="bg-muted px-1.5 py-0.5 rounded">chrome://extensions/</code> 접속</li>
-                  <li>오른쪽 상단의 <strong>"개발자 모드"</strong> 토글 활성화</li>
-                  <li><strong>"압축해제된 확장 프로그램을 로드합니다"</strong> 클릭</li>
+                  <li>오른쪽 상단의 <strong>&quot;개발자 모드&quot;</strong> 토글 활성화</li>
+                  <li><strong>&quot;압축해제된 확장 프로그램을 로드합니다&quot;</strong> 클릭</li>
                   <li>다운로드한 <code className="bg-muted px-1.5 py-0.5 rounded">extension</code> 폴더 선택</li>
                   <li>툴바에 🧵 ThreadSaver 아이콘이 나타나면 설치 완료!</li>
                 </ol>
@@ -164,13 +164,13 @@ export default function ExtensionPage() {
 
               <p className="pt-2"><strong>2.</strong> 툴바의 🧵 ThreadSaver 아이콘을 클릭하세요</p>
 
-              <p className="pt-2"><strong>3.</strong> "📥 타래 추출 시작" 버튼을 클릭하세요</p>
+              <p className="pt-2"><strong>3.</strong> &quot;📥 타래 추출 시작&quot; 버튼을 클릭하세요</p>
               <p className="text-muted-foreground ml-6">
                 • 봇 회피 모드 ON: 안전하지만 느림 (3-5분)<br />
                 • 봇 회피 모드 OFF: 빠르지만 차단 위험 (1-2분)
               </p>
 
-              <p className="pt-2"><strong>4.</strong> 추출이 완료되면 "저장" 버튼을 클릭하세요</p>
+              <p className="pt-2"><strong>4.</strong> 추출이 완료되면 &quot;저장&quot; 버튼을 클릭하세요</p>
               <p className="text-muted-foreground ml-6">
                 자동으로 카테고리가 분류되어 시리즈로 저장됩니다
               </p>
