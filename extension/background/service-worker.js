@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     // 기본 설정 저장
     chrome.storage.sync.set({
-      serverUrl: 'http://localhost:4000'
+      serverUrl: 'https://novel-pzt4.vercel.app'
     });
 
     console.log('ThreadSaver: Default settings saved');
