@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Upload, FileArchive, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
 import Link from 'next/link'
 import { Header, Footer } from '@/components/Header'
 
@@ -12,40 +13,74 @@ export default function ImportPage() {
   const [importing, setImporting] = useState(false)
   const [result, setResult] = useState<any>(null)
   const [error, setError] = useState<string>('')
+  const [uploadProgress, setUploadProgress] = useState(0)
 
   const handleUpload = async () => {
     if (!file) return
 
-    // 파일 크기 체크 (50MB 제한)
-    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
-    if (file.size > MAX_SIZE) {
-      setError(`파일 크기가 너무 큽니다 (최대 50MB). 현재: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
-      return
-    }
-
     setImporting(true)
     setError('')
     setResult(null)
-
-    const formData = new FormData()
-    formData.append('archive', file)
-    // 파일 확장자에 따라 mode 자동 설정
-    const mode = file.name.endsWith('.zip') ? 'zip' : 'js'
-    formData.append('mode', mode)
+    setUploadProgress(0)
 
     try {
-      const res = await fetch('/api/import/twitter-archive', {
+      // 청크 크기: 4MB (Vercel 제한보다 작게)
+      const CHUNK_SIZE = 4 * 1024 * 1024
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE)
+      const uploadId = `${Date.now()}-${Math.random().toString(36).substring(7)}`
+
+      console.log(`Uploading ${totalChunks} chunks for file ${file.name}`)
+
+      // 모든 청크 업로드
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE
+        const end = Math.min(start + CHUNK_SIZE, file.size)
+        const chunk = file.slice(start, end)
+
+        const formData = new FormData()
+        formData.append('chunk', chunk)
+        formData.append('chunkIndex', chunkIndex.toString())
+        formData.append('totalChunks', totalChunks.toString())
+        formData.append('uploadId', uploadId)
+
+        const res = await fetch('/api/import/upload-chunk', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!res.ok) {
+          const errorData = await res.json()
+          throw new Error(errorData.error || `Failed to upload chunk ${chunkIndex + 1}`)
+        }
+
+        // 진행률 업데이트
+        const progress = Math.round(((chunkIndex + 1) / totalChunks) * 100)
+        setUploadProgress(progress)
+        console.log(`Progress: ${progress}%`)
+      }
+
+      // 업로드 완료, 청크 병합 및 처리 요청
+      console.log('All chunks uploaded, finalizing...')
+      const finalizeRes = await fetch('/api/import/finalize-upload', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          uploadId,
+          totalChunks,
+          filename: file.name,
+        }),
       })
 
-      const data = await res.json()
+      const data = await finalizeRes.json()
 
-      if (!res.ok) {
+      if (!finalizeRes.ok) {
         throw new Error(data.error || 'Failed to process archive')
       }
 
       setResult(data)
+      setUploadProgress(100)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -144,6 +179,17 @@ export default function ImportPage() {
               </div>
             )}
           </div>
+
+          {/* 진행률 표시 */}
+          {importing && uploadProgress > 0 && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">업로드 중...</span>
+                <span className="font-medium">{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+            </div>
+          )}
 
           {/* 에러 표시 */}
           {error && (
