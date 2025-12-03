@@ -31,13 +31,16 @@ export async function processTwitterArchive(
 ): Promise<ProcessResult> {
   console.log(`Processing ${tweetsData.length} tweets from archive...`)
 
-  // 1. 기존 트윗 ID 조회 (중복 방지)
+  // 1. 새 트윗 ID만 체크 (최적화: 전체 조회 대신 특정 ID만 확인)
+  const tweetIdsToCheck = tweetsData.map(t => BigInt(t.tweet.id))
   const existingTweetIds = await prisma.tweet.findMany({
-    where: { authorUsername: username },
+    where: {
+      id: { in: tweetIdsToCheck }
+    },
     select: { id: true },
   })
   const existingIdsSet = new Set(existingTweetIds.map(t => t.id.toString()))
-  console.log(`Found ${existingIdsSet.size} existing tweets for ${username}`)
+  console.log(`Found ${existingIdsSet.size} existing tweets out of ${tweetsData.length}`)
 
   // 2. 새로운 트윗만 필터링
   const newTweetsData = tweetsData.filter(

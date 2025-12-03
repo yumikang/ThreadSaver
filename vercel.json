@@ -1,7 +1,7 @@
 {
   "functions": {
     "app/api/import/twitter-archive/route.ts": {
-      "maxDuration": 60,
+      "maxDuration": 300,
       "memory": 1024
     },
     "app/api/import/upload-chunk/route.ts": {
@@ -9,7 +9,7 @@
       "memory": 512
     },
     "app/api/import/finalize-upload/route.ts": {
-      "maxDuration": 60,
+      "maxDuration": 300,
       "memory": 1024
     }
   }

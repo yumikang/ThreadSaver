@@ -6,7 +6,7 @@ import {
 } from '@/lib/twitter-archive-processor'
 
 export const runtime = 'nodejs'
-export const maxDuration = 60
+export const maxDuration = 300
 
 // 청크 병합 및 처리 엔드포인트 (Vercel Blob Storage 사용)
 export async function POST(request: NextRequest) {
