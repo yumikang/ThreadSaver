@@ -3,11 +3,14 @@
     "app/api/import/twitter-archive/route.ts": {
       "maxDuration": 60,
       "memory": 1024
-    }
-  },
-  "api": {
-    "bodyParser": {
-      "sizeLimit": "50mb"
+    },
+    "app/api/import/upload-chunk/route.ts": {
+      "maxDuration": 60,
+      "memory": 512
+    },
+    "app/api/import/finalize-upload/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   }
 }

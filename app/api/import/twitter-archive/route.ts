@@ -8,15 +8,6 @@ import {
 export const runtime = 'nodejs'
 export const maxDuration = 60 // 최대 60초 실행 시간
 
-// Body size limit 설정 (50MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '50mb',
-    },
-  },
-}
-
 export async function POST(request: NextRequest) {
   try {
     // 1. FormData에서 파일과 모드 가져오기
