@@ -50,7 +50,10 @@ vercel env add NEXT_PUBLIC_APP_URL
 ### 4. 데이터베이스 초기화
 
 ```bash
-# Prisma로 스키마 적용
+# Prisma로 스키마 적용 (프로덕션)
+npx prisma migrate deploy
+
+# 또는 개발 환경
 npx prisma db push
 ```
 

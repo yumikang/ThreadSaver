@@ -16,6 +16,13 @@ export default function ImportPage() {
   const handleUpload = async () => {
     if (!file) return
 
+    // 파일 크기 체크 (50MB 제한)
+    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
+    if (file.size > MAX_SIZE) {
+      setError(`파일 크기가 너무 큽니다 (최대 50MB). 현재: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
+      return
+    }
+
     setImporting(true)
     setError('')
     setResult(null)

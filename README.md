@@ -59,9 +59,9 @@ threadsaver/
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14+, TypeScript, Tailwind CSS, shadcn/ui
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: Next.js API Routes, FastAPI (scraper)
-- **Database**: PostgreSQL, Prisma ORM
+- **Database**: Supabase (PostgreSQL), Prisma ORM
 - **Deployment**: Vercel (frontend), VPS (scraper)
 
 ## 📚 Features
@@ -80,9 +80,9 @@ See [prd.md](./prd.md) for detailed product requirements.
 
 ## 🔗 Links
 
-- **PRD**: [prd.md](./prd.md)
+- **Deployment Guide**: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
 - **VPS Scraper**: https://api.one-q.xyz
-- **Database**: 141.164.60.51:5432
+- **Database**: Supabase (PostgreSQL)
 
 ---
 
