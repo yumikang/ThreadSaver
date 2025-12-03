@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
+import { put } from '@vercel/blob'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// 청크 업로드 엔드포인트
+// 청크 업로드 엔드포인트 (Vercel Blob Storage 사용)
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -22,23 +20,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 임시 디렉토리 생성
-    const tmpDir = join('/tmp', 'uploads', uploadId)
-    if (!existsSync(tmpDir)) {
-      await mkdir(tmpDir, { recursive: true })
-    }
+    // Vercel Blob Storage에 청크 저장
+    const blobPath = `uploads/${uploadId}/chunk-${chunkIndex}`
+    const blob = await put(blobPath, chunk, {
+      access: 'public',
+      addRandomSuffix: false,
+    })
 
-    // 청크 저장
-    const chunkPath = join(tmpDir, `chunk-${chunkIndex}`)
-    const buffer = Buffer.from(await chunk.arrayBuffer())
-    await writeFile(chunkPath, buffer)
-
-    console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded (${buffer.length} bytes)`)
+    console.log(`Chunk ${chunkIndex + 1}/${totalChunks} uploaded to blob: ${blob.url}`)
 
     return NextResponse.json({
       success: true,
       chunkIndex,
       totalChunks,
+      blobUrl: blob.url,
     })
   } catch (error) {
     console.error('Chunk upload error:', error)

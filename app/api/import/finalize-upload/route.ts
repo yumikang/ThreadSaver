@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { readFile, readdir, unlink, rmdir } from 'fs/promises'
-import { join } from 'path'
+import { list, del } from '@vercel/blob'
 import {
   processTwitterArchive,
   extractUsernameFromProfile,
@@ -9,7 +8,7 @@ import {
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-// 청크 병합 및 처리 엔드포인트
+// 청크 병합 및 처리 엔드포인트 (Vercel Blob Storage 사용)
 export async function POST(request: NextRequest) {
   try {
     const { uploadId, totalChunks, filename } = await request.json()
@@ -21,35 +20,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 임시 디렉토리에서 청크 읽기
-    const tmpDir = join('/tmp', 'uploads', uploadId)
-    const files = await readdir(tmpDir)
-    const chunkFiles = files
-      .filter((f) => f.startsWith('chunk-'))
-      .sort((a, b) => {
-        const aIndex = parseInt(a.split('-')[1])
-        const bIndex = parseInt(b.split('-')[1])
-        return aIndex - bIndex
-      })
+    // Vercel Blob에서 청크 리스트 가져오기
+    const { blobs } = await list({
+      prefix: `uploads/${uploadId}/`,
+    })
 
-    if (chunkFiles.length !== totalChunks) {
+    if (blobs.length !== totalChunks) {
       return NextResponse.json(
-        { error: `Missing chunks: expected ${totalChunks}, got ${chunkFiles.length}` },
+        { error: `Missing chunks: expected ${totalChunks}, got ${blobs.length}` },
         { status: 400 }
       )
     }
 
-    console.log(`Merging ${chunkFiles.length} chunks...`)
+    // 청크를 인덱스 순서대로 정렬
+    const sortedBlobs = blobs.sort((a, b) => {
+      const aIndex = parseInt(a.pathname.split('chunk-')[1])
+      const bIndex = parseInt(b.pathname.split('chunk-')[1])
+      return aIndex - bIndex
+    })
 
-    // 청크 병합
-    const chunks: Buffer[] = []
-    for (const chunkFile of chunkFiles) {
-      const chunkPath = join(tmpDir, chunkFile)
-      const chunkData = await readFile(chunkPath)
-      chunks.push(chunkData)
+    console.log(`Merging ${sortedBlobs.length} chunks from Blob Storage...`)
+
+    // 모든 청크 다운로드 및 병합
+    const chunks: ArrayBuffer[] = []
+    for (const blob of sortedBlobs) {
+      const response = await fetch(blob.url)
+      const arrayBuffer = await response.arrayBuffer()
+      chunks.push(arrayBuffer)
     }
 
-    const fileContent = Buffer.concat(chunks)
+    // 청크 병합
+    const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)
+    const fileContent = new Uint8Array(totalLength)
+    let offset = 0
+    for (const chunk of chunks) {
+      fileContent.set(new Uint8Array(chunk), offset)
+      offset += chunk.byteLength
+    }
+
     console.log(`Merged file size: ${fileContent.length} bytes`)
 
     // 파일 내용 텍스트로 변환
@@ -95,15 +103,14 @@ export async function POST(request: NextRequest) {
     // 타래 감지 및 DB 저장
     const result = await processTwitterArchive(tweetsData, 'archived_user')
 
-    // 임시 파일 정리
+    // Blob Storage에서 청크 삭제
     try {
-      for (const chunkFile of chunkFiles) {
-        await unlink(join(tmpDir, chunkFile))
+      for (const blob of sortedBlobs) {
+        await del(blob.url)
       }
-      await rmdir(tmpDir)
-      console.log('Cleaned up temporary files')
+      console.log('Cleaned up blob chunks')
     } catch (cleanupError) {
-      console.warn('Failed to cleanup temp files:', cleanupError)
+      console.warn('Failed to cleanup blob chunks:', cleanupError)
     }
 
     console.log('Archive processing complete:', result)
