@@ -149,11 +149,17 @@ export async function processTwitterArchive(
           })
 
           seriesCreated++
+        }, {
+          maxWait: 30000, // 30초 대기
+          timeout: 60000, // 60초 타임아웃
         })
 
         console.log(`Created thread for ${firstId} with ${tweetIds.length} tweets`)
       } catch (error) {
-        console.error(`Failed to create thread for ${firstId}:`, error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        console.error(`Failed to create thread for ${firstId}:`, errorMessage)
+        console.error(`  - Tweet count: ${tweetIds.length}`)
+        console.error(`  - Error type: ${error instanceof Error ? error.constructor.name : typeof error}`)
       }
     }))
 
