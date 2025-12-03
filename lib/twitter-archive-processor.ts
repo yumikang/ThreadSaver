@@ -69,7 +69,7 @@ export async function processTwitterArchive(
 
   // 5. DB에 저장 (트랜잭션으로 배치 처리)
   let seriesCreated = 0
-  const BATCH_SIZE = 50 // 50개씩 배치 처리
+  const BATCH_SIZE = 10 // 10개씩 배치 처리 (타임아웃 방지)
   const threadEntries = Array.from(threads.entries())
 
   for (let i = 0; i < threadEntries.length; i += BATCH_SIZE) {
@@ -150,8 +150,8 @@ export async function processTwitterArchive(
 
           seriesCreated++
         }, {
-          maxWait: 30000, // 30초 대기
-          timeout: 60000, // 60초 타임아웃
+          maxWait: 10000, // 10초 대기
+          timeout: 30000, // 30초 타임아웃
         })
 
         console.log(`Created thread for ${firstId} with ${tweetIds.length} tweets`)
