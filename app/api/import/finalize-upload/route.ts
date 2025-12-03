@@ -41,13 +41,12 @@ export async function POST(request: NextRequest) {
 
     console.log(`Merging ${sortedBlobs.length} chunks from Blob Storage...`)
 
-    // 모든 청크 다운로드 및 병합
-    const chunks: ArrayBuffer[] = []
-    for (const blob of sortedBlobs) {
+    // 모든 청크를 병렬로 다운로드 (속도 개선)
+    const chunkPromises = sortedBlobs.map(async (blob) => {
       const response = await fetch(blob.url)
-      const arrayBuffer = await response.arrayBuffer()
-      chunks.push(arrayBuffer)
-    }
+      return response.arrayBuffer()
+    })
+    const chunks = await Promise.all(chunkPromises)
 
     // 청크 병합
     const totalLength = chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0)

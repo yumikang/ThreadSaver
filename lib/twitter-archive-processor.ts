@@ -64,88 +64,97 @@ export async function processTwitterArchive(
 
   console.log(`Detected ${threads.size} threads from new tweets`)
 
-  // 5. DB에 저장
+  // 5. DB에 저장 (트랜잭션으로 배치 처리)
   let seriesCreated = 0
+  const BATCH_SIZE = 50 // 50개씩 배치 처리
+  const threadEntries = Array.from(threads.entries())
 
-  for (const [firstId, tweetIds] of threads) {
-    try {
-      const firstTweet = tweetMap.get(firstId)!
+  for (let i = 0; i < threadEntries.length; i += BATCH_SIZE) {
+    const batch = threadEntries.slice(i, i + BATCH_SIZE)
 
-      // Thread 생성
-      const thread = await prisma.thread.create({
-        data: {
-          conversationId: firstId,
-          authorUsername: username,
-          tweetCount: tweetIds.length,
-          firstTweetUrl: `https://twitter.com/${username}/status/${firstId}`,
-          firstTweetDate: new Date(firstTweet.created_at),
-        },
-      })
+    await Promise.all(batch.map(async ([firstId, tweetIds]) => {
+      try {
+        await prisma.$transaction(async (tx) => {
+          const firstTweet = tweetMap.get(firstId)!
 
-      // Tweets 생성
-      const tweetsToCreate = tweetIds.map((id, index) => {
-        const tweet = tweetMap.get(id)!
-        return {
-          id: BigInt(id),
-          threadId: thread.id,
-          content: tweet.full_text,
-          createdAt: new Date(tweet.created_at),
-          authorUsername: username,
-          sequenceNumber: index + 1,
-          replyToId: tweet.in_reply_to_status_id
-            ? BigInt(tweet.in_reply_to_status_id)
-            : null,
-          mediaUrls: tweet.entities?.media?.map((m) => m.media_url_https) || [],
-        }
-      })
+          // Thread 생성
+          const thread = await tx.thread.create({
+            data: {
+              conversationId: firstId,
+              authorUsername: username,
+              tweetCount: tweetIds.length,
+              firstTweetUrl: `https://twitter.com/${username}/status/${firstId}`,
+              firstTweetDate: new Date(firstTweet.created_at),
+            },
+          })
 
-      await prisma.tweet.createMany({
-        data: tweetsToCreate,
-      })
+          // Tweets 생성
+          const tweetsToCreate = tweetIds.map((id, index) => {
+            const tweet = tweetMap.get(id)!
+            return {
+              id: BigInt(id),
+              threadId: thread.id,
+              content: tweet.full_text,
+              createdAt: new Date(tweet.created_at),
+              authorUsername: username,
+              sequenceNumber: index + 1,
+              replyToId: tweet.in_reply_to_status_id
+                ? BigInt(tweet.in_reply_to_status_id)
+                : null,
+              mediaUrls: tweet.entities?.media?.map((m) => m.media_url_https) || [],
+            }
+          })
 
-      // Series 생성 (각 Thread마다 하나의 Series)
-      // 안전한 제목 생성 (특수문자 제거)
-      const rawTitle = firstTweet.full_text
-        .slice(0, 50)
-        .replace(/\n/g, ' ')
-        .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // 제어 문자 제거
-        .replace(/[\\]/g, '') // 백슬래시 제거
-        .trim()
+          await tx.tweet.createMany({
+            data: tweetsToCreate,
+          })
 
-      const seriesTitle = rawTitle.length > 0
-        ? rawTitle + (firstTweet.full_text.length > 50 ? '...' : '')
-        : `타래 #${firstId.slice(-8)}`
+          // Series 생성 (각 Thread마다 하나의 Series)
+          // 안전한 제목 생성 (특수문자 제거)
+          const rawTitle = firstTweet.full_text
+            .slice(0, 50)
+            .replace(/\n/g, ' ')
+            .replace(/[\x00-\x1F\x7F-\x9F]/g, '') // 제어 문자 제거
+            .replace(/[\\]/g, '') // 백슬래시 제거
+            .trim()
 
-      const seriesSlug = `${username}-${firstId}`
+          const seriesTitle = rawTitle.length > 0
+            ? rawTitle + (firstTweet.full_text.length > 50 ? '...' : '')
+            : `타래 #${firstId.slice(-8)}`
 
-      const series = await prisma.series.create({
-        data: {
-          authorUsername: username,
-          title: seriesTitle,
-          description: `${tweetIds.length}개의 트윗으로 구성된 타래`,
-          slug: seriesSlug,
-          totalTweets: tweetIds.length,
-          totalThreads: 1,
-          isPublic: true,
-        },
-      })
+          const seriesSlug = `${username}-${firstId}`
 
-      // SeriesThread 연결
-      await prisma.seriesThread.create({
-        data: {
-          seriesId: series.id,
-          threadId: thread.id,
-          sequenceNumber: 1,
-        },
-      })
+          const series = await tx.series.create({
+            data: {
+              authorUsername: username,
+              title: seriesTitle,
+              description: `${tweetIds.length}개의 트윗으로 구성된 타래`,
+              slug: seriesSlug,
+              totalTweets: tweetIds.length,
+              totalThreads: 1,
+              isPublic: true,
+            },
+          })
 
-      seriesCreated++
-      console.log(
-        `Created thread ${thread.id} with ${tweetIds.length} tweets and series ${series.id}`
-      )
-    } catch (error) {
-      console.error(`Failed to create thread for ${firstId}:`, error)
-    }
+          // SeriesThread 연결
+          await tx.seriesThread.create({
+            data: {
+              seriesId: series.id,
+              threadId: thread.id,
+              sequenceNumber: 1,
+            },
+          })
+
+          seriesCreated++
+        })
+
+        console.log(`Created thread for ${firstId} with ${tweetIds.length} tweets`)
+      } catch (error) {
+        console.error(`Failed to create thread for ${firstId}:`, error)
+      }
+    }))
+
+    console.log(`Processed batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(threadEntries.length / BATCH_SIZE)}`)
   }
 
   return {
