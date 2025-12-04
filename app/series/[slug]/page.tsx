@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatDate, formatNumber } from '@/lib/utils'
 import { Header, Footer } from '@/components/Header'
-import { Trash2, Copy, Check } from 'lucide-react'
+import { Trash2, Copy, Check, BookOpen } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +49,7 @@ export default function SeriesReaderPage() {
   const [progress, setProgress] = useState(0)
   const [deleting, setDeleting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   useEffect(() => {
     fetchSeries()
@@ -214,6 +215,40 @@ export default function SeriesReaderPage() {
     }
   }
 
+  async function handleExportToNovelMind() {
+    if (!series) return
+
+    setExporting(true)
+    try {
+      const res = await fetch('/api/novel-integration/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seriesId: series.id,
+          minTweetsPerThread: 10, // 중편 이상만 (10개 이상 트윗)
+        }),
+      })
+
+      const result = await res.json()
+
+      if (!result.success) {
+        alert(`내보내기 실패: ${result.error}`)
+        return
+      }
+
+      alert(
+        `✅ NovelMind로 내보내기 완료!\n\n` +
+          `에피소드: ${result.data.episodeCount}개\n\n` +
+          `NovelMind 앱에서 확인하세요.`
+      )
+    } catch (error) {
+      console.error('Export error:', error)
+      alert('내보내기에 실패했습니다.')
+    } finally {
+      setExporting(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="dark-theme min-h-screen flex flex-col">
@@ -325,13 +360,39 @@ export default function SeriesReaderPage() {
           {series.description && (
             <p className="text-muted-foreground mb-4">{series.description}</p>
           )}
-          <div className="flex gap-4 text-sm text-muted-foreground">
+          <div className="flex gap-4 text-sm text-muted-foreground mb-4">
             <span>by @{series.authorUsername}</span>
             <span>·</span>
             <span>{series.totalThreads}개 타래</span>
             <span>·</span>
             <span>{formatNumber(series.totalViews)} 조회</span>
           </div>
+
+          {/* NovelMind 내보내기 버튼 */}
+          {series.totalTweets >= 21 && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-lg border">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold flex items-center gap-2 mb-1">
+                    <BookOpen className="w-4 h-4" />
+                    NovelMind로 내보내기
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    이 시리즈를 NovelMind 프로젝트로 변환하여 AI와 함께 다음 전개를 구상할 수 있습니다.
+                    <br />
+                    (중편 이상 타래만 포함: 10개 이상 트윗)
+                  </p>
+                </div>
+                <Button
+                  onClick={handleExportToNovelMind}
+                  disabled={exporting}
+                  className="ml-4"
+                >
+                  {exporting ? '내보내는 중...' : '내보내기'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tweets */}

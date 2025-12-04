@@ -1,7 +1,3 @@
-// 통합 스키마: ThreadSaver + NovelMind
-// ThreadSaver: 트위터 타래 아카이브
-// NovelMind: AI 기반 소설 창작 도우미
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,10 +6,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-// ============================================
-// ThreadSaver 기존 테이블
-// ============================================
 
 model Thread {
   id             String         @id @default(uuid())
@@ -73,9 +65,6 @@ model Series {
   readingProgress ReadingProgress[]
   seriesThreads   SeriesThread[]
   seriesViews     SeriesView[]
-
-  // 🔗 NovelMind 통합: Series → Project 연결
-  novelProjects   SeriesProject[]
 
   @@index([slug])
   @@index([authorUsername])
@@ -162,138 +151,4 @@ model Analytics {
 
   @@index([eventType, createdAt])
   @@map("analytics")
-}
-
-// ============================================
-// NovelMind 테이블
-// ============================================
-
-model OriginalWork {
-  id              String      @id @default(uuid())
-  title           String
-  mediaType       String      // anime, drama, game, idol, webtoon
-  source          String      @default("Custom") // preset name or "Custom"
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  canonCharacters Character[] @relation("OriginalWorkCharacters")
-  projects        Project[]
-  worldRules      WorldRule[]
-
-  @@map("original_works")
-}
-
-model Character {
-  id             String        @id @default(uuid())
-  name           String
-  isCanon        Boolean       @default(true) // true: 원작 캐릭터, false: 오리지널
-  description    String?
-  personality    String[]      // ["냉철함", "츤데레"]
-  appearance     String[]      // ["검은 머리", "키가 큼"]
-  abilities      String[]      // ["마법", "검술"]
-  speechPatterns String[]      // 예시 대사
-  relationships  Json?         // {"캐릭터ID": "관계설명"}
-  originalWorkId String?
-  projectId      String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  originalWork   OriginalWork? @relation("OriginalWorkCharacters", fields: [originalWorkId], references: [id], onDelete: Cascade)
-  project        Project?      @relation("ProjectCustomCharacters", fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("characters")
-}
-
-model WorldRule {
-  id             String       @id @default(uuid())
-  title          String
-  description    String
-  originalWorkId String
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  originalWork   OriginalWork @relation(fields: [originalWorkId], references: [id], onDelete: Cascade)
-
-  @@map("world_rules")
-}
-
-model Project {
-  id                 String       @id @default(uuid())
-  title              String
-  originalWorkId     String
-  timelineSetting    String       // "시즌3 이후", "결말 이후"
-  auSettings         String[]     // ["현대 AU", "학원물"]
-  activeCharacterIds String[]     // 활성 캐릭터 ID 배열
-  tone               Json         // {atmosphere: "dark", pacing: "fast"}
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  customCharacters   Character[]  @relation("ProjectCustomCharacters")
-  foreshadows        Foreshadow[]
-  episodes           Episode[]
-  originalWork       OriginalWork @relation(fields: [originalWorkId], references: [id])
-
-  // 🔗 ThreadSaver 통합: Project ← Series 연결
-  linkedSeries       SeriesProject?
-
-  @@map("projects")
-}
-
-model Foreshadow {
-  id             String   @id @default(uuid())
-  title          String
-  description    String
-  status         String   // pending, active, resolved, discarded
-  plantedAt      String?  // "3화"
-  expectedPayoff String?  // "10화 예정"
-  projectId      String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@map("foreshadows")
-}
-
-model Episode {
-  id        String        @id @default(uuid())
-  title     String
-  content   String        @db.Text // 타래 전체 본문 (트윗들을 합친 연속된 텍스트)
-  order     Int           @default(0)
-  projectId String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  project   Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  notes     EpisodeNote[]
-
-  @@map("episodes")
-}
-
-model EpisodeNote {
-  id        String   @id @default(uuid())
-  content   String
-  type      String   @default("General") // General, Dialogue, Plot, Draft
-  order     Int      @default(0)
-  episodeId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-
-  @@map("episode_notes")
-}
-
-// ============================================
-// 🔗 통합 브릿지 테이블
-// ============================================
-
-model SeriesProject {
-  id                String   @id @default(uuid())
-  seriesId          String   @unique @map("series_id")
-  projectId         String   @unique @map("project_id")
-  syncEnabled       Boolean  @default(true) @map("sync_enabled") // 자동 동기화 활성화
-  lastSyncAt        DateTime? @map("last_sync_at")
-  createdAt         DateTime @default(now()) @map("created_at")
-
-  // Relations
-  series            Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
-  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
-  @@index([seriesId])
-  @@index([projectId])
-  @@map("series_projects")
 }
