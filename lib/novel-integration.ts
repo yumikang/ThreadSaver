@@ -47,7 +47,29 @@ export async function createProjectFromSeries(
   } = options
 
   try {
-    // 1. Series와 연결된 Thread, Tweet 데이터 조회
+    // 1. 이미 내보낸 Series인지 확인
+    const existingLink = await prisma.seriesProject.findUnique({
+      where: { seriesId },
+      include: {
+        project: {
+          include: {
+            episodes: true,
+          },
+        },
+      },
+    })
+
+    if (existingLink) {
+      // 이미 내보낸 Series는 기존 프로젝트 ID 반환
+      return {
+        success: true,
+        projectId: existingLink.projectId,
+        episodeCount: existingLink.project.episodes.length,
+        error: 'This series has already been exported. Returning existing project.',
+      }
+    }
+
+    // 2. Series와 연결된 Thread, Tweet 데이터 조회
     const series = await prisma.series.findUnique({
       where: { id: seriesId },
       include: {
