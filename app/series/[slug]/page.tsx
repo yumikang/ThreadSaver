@@ -238,8 +238,8 @@ export default function SeriesReaderPage() {
 
       alert(
         `✅ NovelMind로 내보내기 완료!\n\n` +
-          `에피소드: ${result.data.episodeCount}개\n\n` +
-          `NovelMind 앱에서 확인하세요.`
+        `에피소드: ${result.data.episodeCount}개\n\n` +
+        `NovelMind 앱에서 확인하세요.`
       )
     } catch (error) {
       console.error('Export error:', error)
@@ -315,13 +315,13 @@ export default function SeriesReaderPage() {
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4 mr-1" />
-                    복사됨
+                    <Check className="w-4 h-4 md:mr-1" />
+                    <span className="hidden md:inline">복사됨</span>
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4 mr-1" />
-                    전체 복사
+                    <Copy className="w-4 h-4 md:mr-1" />
+                    <span className="hidden md:inline">전체 복사</span>
                   </>
                 )}
               </Button>
